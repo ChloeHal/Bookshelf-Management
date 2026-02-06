@@ -1,8 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
 
 /* Custom DaisyUI theme */
+:root:has(input.theme-controller[value="daisysword"]:checked),
 [data-theme="daisysword"] {
-  color-scheme: light;
+  color-scheme: "light";
   --color-base-100: oklch(96% 0.003 264.542);
   --color-base-200: oklch(92% 0.006 264.531);
   --color-base-300: oklch(87% 0.01 258.338);
@@ -24,13 +25,13 @@
   --color-error: oklch(65% 0.241 354.308);
   --color-error-content: oklch(97% 0.014 343.198);
   --radius-selector: 0rem;
-  --radius-field: 0.25rem;
-  --radius-box: 0.25rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 2px;
+  --radius-field: 0rem;
+  --radius-box: 0rem;
+  --size-selector: 0.21875rem;
+  --size-field: 0.21875rem;
+  --border: 1px;
   --depth: 0;
-  --noise: 1;
+  --noise: 0;
 }
 
 /* Lexend font override */

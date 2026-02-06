@@ -800,7 +800,7 @@ function displayBooks() {
   container.innerHTML = books
     .map(
       (book) => `
-        <div class="card bg-base-100 border border-base-300 transition-all hover:border-primary hover:-translate-y-0.5 ${isRead(book.id) ? "opacity-50" : ""}">
+        <div class="card card-border bg-base-100 transition-all hover:border-primary hover:-translate-y-0.5 ${isRead(book.id) ? "opacity-50" : ""}">
           <div class="card-body p-5">
             <div class="flex justify-between items-start gap-2">
               <h3 class="card-title text-base">
@@ -933,7 +933,7 @@ function updateGenreSelect() {
     book.genres.forEach((genre) => allGenres.add(genre));
   });
 
-  select.innerHTML = '<option value="">Sélectionner un genre</option>';
+  select.innerHTML = '<option disabled selected>Sélectionner un genre</option>';
 
   if (allGenres.size === 0) {
     select.innerHTML +=
@@ -1043,12 +1043,12 @@ function displayChallenge() {
   if (!challenge) {
     container.innerHTML = `
       <div class="max-w-md mx-auto">
-        <div class="card bg-base-100 border border-base-300">
+        <div class="card card-border bg-base-100">
           <div class="card-body text-center">
             <h2 class="card-title justify-center">Créer un challenge de lecture</h2>
             <p class="opacity-60">Combien de livres souhaitez-vous lire cette année ?</p>
             <div class="flex items-center justify-center gap-2 mt-4">
-              <input type="number" id="challenge-goal" class="input input-bordered w-24 text-center text-lg" min="1" placeholder="10" />
+              <input type="number" id="challenge-goal" class="input w-24 text-center text-lg" min="1" placeholder="10" />
               <button onclick="createChallenge()" class="btn btn-primary">Créer mon challenge</button>
             </div>
           </div>
@@ -1079,7 +1079,7 @@ function displayChallenge() {
     bookListHtml = challengeBooks
       .map(
         (book) => `
-        <div class="flex justify-between items-center p-3 bg-base-200 border border-base-300 rounded-sm mb-2 ${isRead(book.id) ? "opacity-50" : ""}">
+        <div class="flex justify-between items-center p-3 bg-base-200 rounded-sm mb-2 border border-base-300 ${isRead(book.id) ? "opacity-50" : ""}">
           <div class="flex-1">
             <div class="font-medium text-sm">
               ${book.title}
@@ -1103,7 +1103,7 @@ function displayChallenge() {
 
   container.innerHTML = `
     <div class="max-w-2xl mx-auto">
-      <div class="card bg-base-100 border border-base-300">
+      <div class="card card-border bg-base-100">
         <div class="card-body">
           <div class="flex justify-between items-center mb-4">
             <h2 class="card-title">Challenge ${challenge.year}</h2>
@@ -1171,7 +1171,7 @@ function renderBookSelectorList(query) {
   list.innerHTML = available
     .map(
       (book) => `
-      <div class="flex justify-between items-center p-3 border border-base-300 rounded-sm mb-1 cursor-pointer transition-all hover:border-primary" onclick="addToChallenge('${book.id}'); closeBookSelector(); displayChallenge();">
+      <div class="flex justify-between items-center p-3 rounded-sm mb-1 cursor-pointer transition-all border border-base-300 hover:border-primary" onclick="addToChallenge('${book.id}'); closeBookSelector(); displayChallenge();">
         <div>
           <div class="font-medium text-sm">${book.title}</div>
           <div class="text-xs opacity-60">${book.author}</div>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ma Bibliothèque</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -29,13 +29,13 @@
 
       <!-- Page Liste des Livres -->
       <div id="list-page" class="page active">
-        <div class="card bg-base-100 border border-base-300 mb-6">
+        <div class="card card-border bg-base-100 mb-6">
           <div class="card-body">
             <h2 class="card-title">Ajouter un livre</h2>
             <div class="grid gap-4 md:grid-cols-3">
-              <input type="text" id="book-title" class="input input-bordered w-full" placeholder="Titre du livre" />
-              <input type="text" id="book-author" class="input input-bordered w-full" placeholder="Auteur" />
-              <input type="text" id="book-genres" class="input input-bordered w-full" placeholder="Genres (max 3, virgules)" />
+              <input type="text" id="book-title" class="input w-full" placeholder="Titre du livre" />
+              <input type="text" id="book-author" class="input w-full" placeholder="Auteur" />
+              <input type="text" id="book-genres" class="input w-full" placeholder="Genres (max 3, virgules)" />
             </div>
             <div class="card-actions mt-4">
               <button onclick="addBook()" class="btn btn-primary">
@@ -52,11 +52,11 @@
       <!-- Page Livre Aléatoire -->
       <div id="random-page" class="page">
         <div class="max-w-md mx-auto">
-          <div class="card bg-base-100 border border-base-300 mb-6">
+          <div class="card card-border bg-base-100 mb-6">
             <div class="card-body">
               <h2 class="card-title">Découvrir un livre</h2>
-              <select id="genre-select" class="select select-bordered w-full">
-                <option value="">Sélectionner un genre</option>
+              <select id="genre-select" class="select w-full">
+                <option disabled selected>Sélectionner un genre</option>
               </select>
               <button onclick="getRandomBook()" class="btn btn-primary w-full">
                 Obtenir une suggestion
@@ -65,7 +65,7 @@
           </div>
 
           <div id="random-result" class="hidden">
-            <div class="card bg-base-100 border border-base-300">
+            <div class="card card-border bg-base-100">
               <div class="card-body">
                 <div class="text-xs uppercase tracking-wide text-primary mb-3">Suggestion de lecture</div>
                 <div id="random-book-content"></div>
@@ -88,7 +88,7 @@
           <h3 class="font-bold text-lg">Ajouter un livre au challenge</h3>
           <button onclick="closeBookSelector()" class="btn btn-sm btn-circle btn-ghost">✕</button>
         </div>
-        <input type="text" id="book-selector-search" class="input input-bordered w-full mb-4" placeholder="Rechercher un livre..." oninput="filterBookSelector()" />
+        <input type="text" id="book-selector-search" class="input w-full mb-4" placeholder="Rechercher un livre..." oninput="filterBookSelector()" />
         <div id="book-selector-list" class="max-h-80 overflow-y-auto"></div>
       </div>
       <form method="dialog" class="modal-backdrop">
