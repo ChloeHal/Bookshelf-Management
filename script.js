@@ -1,759 +1,22 @@
-// Liste statique des livres (JSON)
-const hardcodedBooks = [
-  {
-    title: "Kallocaïne",
-    author: "Karin Boye",
-    genres: ["Dystopie", "Science-fiction", "Anticipation"],
-  },
-  {
-    title: "Après le monde",
-    author: "Antoinette Rychner",
-    genres: [
-      "Post-apocalyptique",
-      "Dystopie",
-      "Écoféministe",
-      "Collapsologie",
-    ],
-  },
-  {
-    title: "Dans la forêt",
-    author: "Jean Hegland",
-    genres: [
-      "Post-apocalyptique",
-      "Nature writing",
-      "Roman d'apprentissage",
-      "Survie",
-    ],
-  },
-  {
-    title: "Ubik",
-    author: "Philip K. Dick",
-    genres: ["Science-fiction", "Dystopie", "Philosophique", "Paranormal"],
-  },
-  {
-    title: "2054",
-    author: "Elliot Ackerman",
-    genres: ["Thriller", "Anticipation", "Géopolitique", "Science-fiction"],
-  },
-  {
-    title: "Lux",
-    author: "Maxime Chattam",
-    genres: [
-      "Thriller",
-      "Anticipation",
-      "Post-apocalyptique",
-      "Science-fiction",
-    ],
-  },
-  {
-    title: "Le gang de la clef à molette",
-    author: "Edward Abbey",
-    genres: ["Roman", "Écologie", "Aventure", "Satire"],
-  },
-  {
-    title: "Sans âme",
-    author: "Charlotte Heuse",
-    genres: ["Roman", "Fantastique", "Drame"],
-  },
-  {
-    title: "Babel",
-    author: "R.F. Kuang",
-    genres: ["Fantasy", "Historique", "Dark Academia", "Politique"],
-  },
-  {
-    title: "Le Temps des sorcières",
-    author: "Alix E. Harrow",
-    genres: ["Fantasy", "Féministe", "Historique", "Surnaturel"],
-  },
-  {
-    title: "Celle qui devint le soleil",
-    author: "Shelley Parker-Chan",
-    genres: ["Fantasy", "Historique", "Chine", "Épique"],
-  },
-  {
-    title: "Un monde après l'autre",
-    author: "Jodi Taylor",
-    genres: [
-      "Science-fiction",
-      "Voyage dans le temps",
-      "Humour",
-      "Aventure",
-    ],
-  },
-  {
-    title: "Jane Eyre",
-    author: "Charlotte Brontë",
-    genres: ["Classique", "Romance", "Gothique", "Victorien"],
-  },
-  {
-    title: "Furies",
-    author: "Julie Ruocco",
-    genres: ["Thriller", "Polar", "Psychologique"],
-  },
-  {
-    title: "Camille, 1815",
-    author: "Armand Clery",
-    genres: ["Historique", "Roman", "France"],
-  },
-  {
-    title: "Le Roi et l'horloger",
-    author: "Arnaldur Indriðason",
-    genres: ["Polar", "Islandais", "Mystère", "Crime"],
-  },
-  {
-    title: "La Couturière de Dachau",
-    author: "Mary Chamberlain",
-    genres: [
-      "Historique",
-      "Seconde Guerre mondiale",
-      "Drame",
-      "Biographique",
-    ],
-  },
-  {
-    title: "Le non de Klara",
-    author: "Soazig Aaron",
-    genres: ["Roman", "Féministe", "Contemporain", "Psychologique"],
-  },
-  {
-    title: "Le Grand Feu",
-    author: "Léonor de Récondo",
-    genres: ["Roman", "Historique", "Drame", "Littéraire"],
-  },
-  {
-    title: "Mendelssohn est sur le toit",
-    author: "Jiří Weil",
-    genres: [
-      "Historique",
-      "Seconde Guerre mondiale",
-      "Roman tchèque",
-      "Satire",
-    ],
-  },
-  {
-    title: "Les Passeurs de livres de Daraya",
-    author: "Delphine Minoui",
-    genres: ["Documentaire", "Guerre", "Syrie", "Témoignage"],
-  },
-  {
-    title: "Jeanne Seymour : La Reine bien-aimée",
-    author: "Alison Weir",
-    genres: ["Historique", "Biographie", "Tudor", "Romance"],
-  },
-  {
-    title: "Madame Pylinska et le secret de Chopin",
-    author: "Éric-Emmanuel Schmitt",
-    genres: ["Roman", "Musique", "Philosophique", "Littéraire"],
-  },
-  {
-    title: "La Librairie des chats noirs",
-    author: "Piergiorgio Pulixi",
-    genres: ["Polar", "Italien", "Mystère", "Thriller"],
-  },
-  {
-    title: "L'Empreinte",
-    author: "Alexandria Marzano-Lesnevich",
-    genres: ["True Crime", "Mémoire", "Justice", "Documentaire"],
-  },
-  {
-    title: "Rouge Karma",
-    author: "Jean-Christophe Grangé",
-    genres: ["Thriller", "Polar", "Mystique", "Action"],
-  },
-  {
-    title: "Metropolis",
-    author: "Philip Kerr",
-    genres: ["Polar historique", "Berlin", "Noir", "Crime"],
-  },
-  {
-    title: "Nous étions le sel de la mer",
-    author: "Roxanne Bouchard",
-    genres: ["Roman québécois", "Drame", "Maritime", "Psychologique"],
-  },
-  {
-    title: "Le mari parfait d'Agatha Christie",
-    author: "Bénédicte Jourgeaud",
-    genres: [
-      "Biographie romancée",
-      "Historique",
-      "Mystère",
-      "Littéraire",
-    ],
-  },
-  {
-    title: "Le Maître des énigmes",
-    author: "Danielle Trussoni",
-    genres: ["Thriller", "Mystère", "Aventure", "Ésotérique"],
-  },
-  {
-    title: "Le Dernier inventeur",
-    author: "Héloïse Guay de Bellissen",
-    genres: ["Roman", "Historique", "Science", "Aventure"],
-  },
-  {
-    title: "Là où chantent les écrevisses",
-    author: "Delia Owens",
-    genres: ["Roman", "Nature writing", "Mystère", "Coming-of-age"],
-  },
-  {
-    title: "Cinq coeurs en sursis",
-    author: "Laure Manel",
-    genres: ["Romance", "Contemporain", "Feel-good", "Drame"],
-  },
-  {
-    title: "Petites boîtes",
-    author: "Yōko Ogawa",
-    genres: ["Roman japonais", "Littéraire", "Mélancolique", "Poétique"],
-  },
-  {
-    title: "Qu'importe la couleur du ciel",
-    author: "Valérie Cohen",
-    genres: ["Roman", "Contemporain", "Drame", "Psychologique"],
-  },
-  {
-    title: "La vérité sur la lumière",
-    author: "Auður Ava Ólafsdóttir",
-    genres: ["Roman islandais", "Littéraire", "Poétique", "Nature"],
-  },
-  {
-    title: "Noël surprise dans les Highlands",
-    author: "Sarah Morgan",
-    genres: ["Romance", "Noël", "Feel-good", "Écossais"],
-  },
-  {
-    title: "Rhapsodie balkanique",
-    author: "Maria Kassimova-Moisset",
-    genres: ["Roman", "Balkans", "Historique", "Culturel"],
-  },
-  {
-    title: "La vie avant l'homme",
-    author: "Margaret Atwood",
-    genres: ["Roman", "Psychologique", "Canadien", "Féministe"],
-  },
-  {
-    title: "Le Prince à la petite tasse",
-    author: "Emilie de Turckheim",
-    genres: ["Roman", "Conte moderne", "Fantaisie", "Humour"],
-  },
-  {
-    title: "Bimbo: Repenser les normes de la féminité",
-    author: "Edie Blanchard",
-    genres: ["Essai", "Féminisme", "Sociologie", "Culture populaire"],
-  },
-  {
-    title: "Psychogénéalogie",
-    author: "Anne Ancelin Schützenberger",
-    genres: [
-      "Psychologie",
-      "Thérapie",
-      "Famille",
-      "Développement personnel",
-    ],
-  },
-  {
-    title: "Nous sommes tous des féministes",
-    author: "Chimamanda Ngozi Adichie",
-    genres: ["Essai", "Féminisme", "Société", "Manifeste"],
-  },
-  {
-    title: "Ni vues ni connues",
-    author: "Collectif Georgette Sand",
-    genres: ["Histoire", "Féminisme", "Biographies", "Société"],
-  },
-  {
-    title: "Histoire des préjugés",
-    author: "Jeanne Guérout",
-    genres: ["Histoire", "Sociologie", "Essai", "Culture"],
-  },
-  {
-    title: "Le livre des haïku",
-    author: "Jack Kerouac",
-    genres: ["Poésie", "Haïku", "Beat Generation", "Zen"],
-  },
-  {
-    title: "The Best of Europe for Women",
-    author: "Choisir la cause des femmes",
-    genres: ["Essai", "Féminisme", "Europe", "Politique"],
-  },
-  {
-    title: "Les grandes oubliées",
-    author: "Titiou Lecoq",
-    genres: ["Histoire", "Féminisme", "Biographies", "Essai"],
-  },
-  {
-    title: "Le deuxième sexe, I",
-    author: "Simone de Beauvoir",
-    genres: ["Philosophie", "Féminisme", "Essai", "Classique"],
-  },
-  {
-    title: "Ces hommes qui m'expliquent la vie",
-    author: "Rebecca Solnit",
-    genres: ["Essai", "Féminisme", "Société", "Culture"],
-  },
-  {
-    title: "Pourquoi les Kevin ne deviennent pas médecins",
-    author: "Étienne Guertin-Tardif",
-    genres: ["Sociologie", "Essai", "Société", "Québécois"],
-  },
-  {
-    title: "Né d'aucune femme",
-    author: "Franck Bouysse",
-    genres: ["Roman", "Noir", "Rural", "Drame"],
-  },
-  {
-    title: "Les Hauts de Hurlevent",
-    author: "Emily Brontë",
-    genres: ["Classique", "Gothique", "Romance", "Victorien"],
-  },
-  {
-    title: "L'Île au trésor",
-    author: "Robert Louis Stevenson",
-    genres: ["Aventure", "Classique", "Pirates", "Jeunesse"],
-  },
-  {
-    title: "Le coût de la virilité",
-    author: "Lucile Peytavin",
-    genres: ["Essai", "Sociologie", "Féminisme", "Économie"],
-  },
-  {
-    title: "Clytemnestra",
-    author: "Costanza Casati",
-    genres: ["Mythologie", "Historique", "Féministe", "Grèce antique"],
-  },
-  {
-    title: "Moi qui n'ai pas connu les hommes",
-    author: "Jacqueline Harpman",
-    genres: [
-      "Science-fiction",
-      "Dystopie",
-      "Féministe",
-      "Philosophique",
-    ],
-  },
-  {
-    title: "Ariadne",
-    author: "Jennifer Saint",
-    genres: ["Mythologie", "Fantasy", "Féministe", "Grèce antique"],
-  },
-  {
-    title: "La brillante destinée d'Elizabeth Zott",
-    author: "Bonnie Garmus",
-    genres: ["Roman", "Féministe", "Humour", "Années 60"],
-  },
-  {
-    title: "Dry",
-    author: "Neal Shusterman",
-    genres: ["Young Adult", "Dystopie", "Survie", "Écologie"],
-  },
-  {
-    title: "La Reine du noir",
-    author: "Julia Bartz",
-    genres: ["Thriller", "Mystère", "Psychologique", "Huis clos"],
-  },
-  {
-    title: "Sublime Royaume",
-    author: "Yaa Gyasi",
-    genres: ["Roman", "Famille", "Ghana", "Diaspora"],
-  },
-  {
-    title: "American Gods",
-    author: "Neil Gaiman",
-    genres: ["Fantasy", "Mythologie", "Urban Fantasy", "Épique"],
-  },
-  {
-    title: "Les Pirates de Dieu",
-    author: "François-Henri Soulié",
-    genres: ["Historique", "Aventure", "Maritime", "Religion"],
-  },
-  {
-    title: "Les Contemplées",
-    author: "Pauline Hillier",
-    genres: ["Roman", "Féministe", "Contemporain", "Philosophique"],
-  },
-  {
-    title: "La prophétesse voilée",
-    author: "Jean d'Aillon",
-    genres: ["Historique", "Mystère", "France", "17e siècle"],
-  },
-  {
-    title: "Le Soleil des Scorta",
-    author: "Laurent Gaudé",
-    genres: ["Roman", "Saga familiale", "Italie", "Drame"],
-  },
-  {
-    title: "Kim Jiyoung, Born 1982",
-    author: "Cho Nam-Joo",
-    genres: ["Roman coréen", "Féministe", "Société", "Contemporain"],
-  },
-  {
-    title: "Les Naufragés du Wager",
-    author: "David Grann",
-    genres: ["Histoire", "Maritime", "Aventure", "Survie"],
-  },
-  {
-    title: "Perspective",
-    author: "Laurent Binet",
-    genres: ["Roman", "Historique", "Art", "Renaissance"],
-  },
-  {
-    title: "Les Hirondelles de Kaboul",
-    author: "Yasmina Khadra",
-    genres: ["Roman", "Afghanistan", "Guerre", "Drame"],
-  },
-  {
-    title: "Les sorcières de Vardø",
-    author: "Anya Bergman",
-    genres: ["Historique", "Sorcellerie", "Norvège", "Féministe"],
-  },
-  {
-    title: "L'Île des âmes",
-    author: "Piergiorgio Pulixi",
-    genres: ["Thriller", "Noir", "Sardaigne", "Mystère"],
-  },
-  {
-    title: "La Septième Lune",
-    author: "Piergiorgio Pulixi",
-    genres: ["Thriller", "Noir", "Italien", "Mystère"],
-  },
-  {
-    title: "Lucia",
-    author: "Bernard Minier",
-    genres: ["Thriller", "Polar", "Psychologique", "Suspense"],
-  },
-  {
-    title: "Les Graciées",
-    author: "Kiran Millwood Hargrave",
-    genres: ["Historique", "Féministe", "Sorcellerie", "17e siècle"],
-  },
-  {
-    title: "Les Jardins de Zagarand",
-    author: "Eric de Kermel",
-    genres: ["Roman", "Orient", "Spirituel", "Philosophique"],
-  },
-  {
-    title: "Women and Other Monsters",
-    author: "Jess Zimmerman",
-    genres: ["Essai", "Mythologie", "Féminisme", "Culture"],
-  },
-  {
-    title: "L'Énigme de Turnglass",
-    author: "Gareth Rubin",
-    genres: ["Mystère", "Historique", "Victorien", "Thriller"],
-  },
-  {
-    title: "Off With Her Head",
-    author: "Eleanor Herman",
-    genres: ["Histoire", "Féminisme", "Biographies", "Pouvoir"],
-  },
-  {
-    title: "La Parabole des talents",
-    author: "Octavia E. Butler",
-    genres: [
-      "Science-fiction",
-      "Dystopie",
-      "Afrofuturisme",
-      "Post-apocalyptique",
-    ],
-  },
-  {
-    title: "La Parabole du semeur",
-    author: "Octavia E. Butler",
-    genres: [
-      "Science-fiction",
-      "Dystopie",
-      "Afrofuturisme",
-      "Post-apocalyptique",
-    ],
-  },
-  {
-    title: "Beauté fatale",
-    author: "Mona Chollet",
-    genres: ["Essai", "Féminisme", "Sociologie", "Beauté"],
-  },
-  {
-    title: "Les Dieux du tango",
-    author: "Carolina De Robertis",
-    genres: ["Roman", "Historique", "Argentine", "LGBTQ+"],
-  },
-  {
-    title: "Noir comme la mer",
-    author: "Mary Higgins Clark",
-    genres: ["Thriller", "Suspense", "Mystère", "Crime"],
-  },
-  {
-    title: "Le Pavillon des orphelines",
-    author: "Joanna Goodman",
-    genres: ["Historique", "Canada", "Drame", "Famille"],
-  },
-  {
-    title: "L'aile des vierges",
-    author: "Laurence Peyrin",
-    genres: ["Historique", "Romance", "France", "19e siècle"],
-  },
-  {
-    title: "My Absolute Darling",
-    author: "Gabriel Tallent",
-    genres: ["Thriller", "Psychologique", "Coming-of-age", "Survie"],
-  },
-  {
-    title: "Tu me manques",
-    author: "Harlan Coben",
-    genres: ["Thriller", "Suspense", "Mystère", "Crime"],
-  },
-  {
-    title: "Le Tueur aveugle",
-    author: "Margaret Atwood",
-    genres: ["Roman", "Dystopie", "Science-fiction", "Féministe"],
-  },
-  {
-    title: "Les Sept Morts d'Evelyn Hardcastle",
-    author: "Stuart Turton",
-    genres: ["Mystère", "Science-fiction", "Thriller", "Énigme"],
-  },
-  {
-    title: "Les meufs c'est des mecs bien",
-    author: "Mourad Winter",
-    genres: ["Humour", "Essai", "Société", "Stand-up"],
-  },
-  {
-    title: "Marques de fabrique",
-    author: "Cecile Baudin",
-    genres: ["Roman", "Terroir", "France", "Social"],
-  },
-  {
-    title: "Juliette et les Cézanne",
-    author: "Jean d'Aillon",
-    genres: ["Historique", "Mystère", "Art", "France"],
-  },
-  {
-    title: "Nos pères, nos frères, nos amis",
-    author: "Mathieu Palain",
-    genres: ["Documentaire", "Société", "Violence", "Masculinité"],
-  },
-  {
-    title: "Seule en sa demeure",
-    author: "Cécile Coulon",
-    genres: ["Roman", "Noir", "Rural", "Gothique"],
-  },
-  {
-    title: "The Fuck-Up",
-    author: "Arthur Nersesian",
-    genres: ["Roman", "Urban", "New York", "Coming-of-age"],
-  },
-  {
-    title: "The Da Vinci Code",
-    author: "Dan Brown",
-    genres: ["Thriller", "Mystère", "Ésotérique", "Aventure"],
-  },
-  {
-    title: "Les Promises",
-    author: "Jean-Christophe Grangé",
-    genres: ["Thriller", "Polar", "Mystère", "Suspense"],
-  },
-  {
-    title: "Poirot Halloween",
-    author: "Agatha Christie",
-    genres: ["Mystère", "Policier", "Classique", "Whodunit"],
-  },
-  {
-    title: "Au NON des femmes",
-    author: "Jennifer Tamas",
-    genres: ["Essai", "Féminisme", "Littérature", "Critique"],
-  },
-  {
-    title: "Le Silence des vaincues",
-    author: "Pat Barker",
-    genres: ["Historique", "Guerre", "Mythologie", "Féministe"],
-  },
-  {
-    title: "Le Maître du Haut Château",
-    author: "Philip K. Dick",
-    genres: ["Science-fiction", "Uchronie", "Dystopie", "Alternatif"],
-  },
-  {
-    title: "Le roi transparent",
-    author: "Rosa Montero",
-    genres: ["Fantasy", "Historique", "Médiéval", "Féministe"],
-  },
-  {
-    title: "Ne tirez pas sur l'oiseau moqueur",
-    author: "Harper Lee",
-    genres: ["Classique", "Drame", "Justice", "Américain"],
-  },
-  {
-    title: "Je crois que j'ai tué ma femme",
-    author: "Frasse Mikardsson",
-    genres: ["Thriller", "Noir", "Psychologique", "Suédois"],
-  },
-  {
-    title: "Les hommes ont peur de la lumière",
-    author: "Douglas Kennedy",
-    genres: ["Roman", "Psychologique", "Contemporain", "Drame"],
-  },
-  {
-    title: "Artemisia",
-    author: "Alexandra Lapierre",
-    genres: [
-      "Biographie romancée",
-      "Art",
-      "Renaissance",
-      "Féministe",
-    ],
-  },
-  {
-    title: "Humus",
-    author: "Gaspard Kœnig",
-    genres: ["Roman", "Philosophique", "Écologie", "Politique"],
-  },
-  {
-    title: "La Mariée portait des bottes jaunes",
-    author: "Katherine Pancol",
-    genres: ["Romance", "Contemporain", "Humour", "Feel-good"],
-  },
-  {
-    title: "Les voleurs d'innocence",
-    author: "Sarai Walker",
-    genres: ["Roman", "Féministe", "Thriller", "Social"],
-  },
-  {
-    title: "Le Portrait de mariage",
-    author: "Maggie O'Farrell",
-    genres: ["Historique", "Art", "Renaissance", "Biographique"],
-  },
-  {
-    title: "L'École aux oiseaux",
-    author: "Clare Beams",
-    genres: ["Roman", "Gothique", "Historique", "Mystère"],
-  },
-  {
-    title: "La Collectionneuse des mots oubliés",
-    author: "Pip Williams",
-    genres: ["Historique", "Féministe", "Linguistique", "Victorien"],
-  },
-  {
-    title: "Eon et le douzième dragon",
-    author: "Alison Goodman",
-    genres: ["Fantasy", "Young Adult", "Dragons", "Asiatique"],
-  },
-  {
-    title: "Les Fiancés de l'hiver",
-    author: "Christelle Dabos",
-    genres: ["Fantasy", "Young Adult", "Steampunk", "Romance"],
-  },
-  {
-    title: "The Calling",
-    author: "James Frey",
-    genres: ["Young Adult", "Science-fiction", "Dystopie", "Aventure"],
-  },
-  {
-    title: "Chapterhouse: Dune",
-    author: "Frank Herbert",
-    genres: [
-      "Science-fiction",
-      "Space Opera",
-      "Épique",
-      "Philosophique",
-    ],
-  },
-  {
-    title: "Heretics of Dune",
-    author: "Frank Herbert",
-    genres: [
-      "Science-fiction",
-      "Space Opera",
-      "Épique",
-      "Philosophique",
-    ],
-  },
-  {
-    title: "God Emperor of Dune",
-    author: "Frank Herbert",
-    genres: [
-      "Science-fiction",
-      "Space Opera",
-      "Épique",
-      "Philosophique",
-    ],
-  },
-  {
-    title: "Les Hauts de Hurlevent",
-    author: "Brontë, Emily",
-    genres: ["Classique", "Roman gothique"],
-  },
-  {
-    title: "L'Île au trésor",
-    author: "Stevenson, Robert Louis",
-    genres: ["Aventure", "Classique"],
-  },
-];
-
-// --- Système d'IDs et persistance ---
-function generateId(book) {
-  return (book.title + "|" + book.author)
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9\-|àâäéèêëïîôùûüÿçœæ]/g, "");
-}
-
-function loadUserBooks() {
-  try {
-    return JSON.parse(localStorage.getItem("userBooks")) || [];
-  } catch {
-    return [];
-  }
-}
-
-function saveUserBooks(userBooks) {
-  localStorage.setItem("userBooks", JSON.stringify(userBooks));
-}
-
-function loadReadBookIds() {
-  try {
-    return JSON.parse(localStorage.getItem("readBookIds")) || [];
-  } catch {
-    return [];
-  }
-}
-
-function saveReadBookIds(ids) {
-  localStorage.setItem("readBookIds", JSON.stringify(ids));
-}
-
-function loadChallenge() {
-  try {
-    return JSON.parse(localStorage.getItem("readingChallenge")) || null;
-  } catch {
-    return null;
-  }
-}
-
-function saveChallenge(challenge) {
-  if (challenge) {
-    localStorage.setItem("readingChallenge", JSON.stringify(challenge));
-  } else {
-    localStorage.removeItem("readingChallenge");
-  }
-}
-
+// --- État global ---
 let books = [];
-let readBookIds = [];
 let challenge = null;
 
-function initBooks() {
-  const userBooks = loadUserBooks();
-  readBookIds = loadReadBookIds();
-  challenge = loadChallenge();
-
-  const hBooks = hardcodedBooks.map((b) => ({
-    ...b,
-    id: generateId(b),
-  }));
-
-  books = [...hBooks, ...userBooks];
+// --- API helper ---
+async function api(endpoint, method = 'GET', body = null) {
+  const options = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) options.body = JSON.stringify(body);
+  const res = await fetch('/api/' + endpoint, options);
+  return res.json();
 }
 
-function isRead(bookId) {
-  return readBookIds.includes(bookId);
+// --- Chargement des données ---
+async function loadBooks() {
+  books = await api('books.php');
+}
+
+async function loadChallengeData() {
+  challenge = await api('challenge.php');
 }
 
 // --- Navigation ---
@@ -800,18 +63,18 @@ function displayBooks() {
   container.innerHTML = books
     .map(
       (book) => `
-        <div class="card card-border bg-base-100 transition-all hover:border-primary hover:-translate-y-0.5 ${isRead(book.id) ? "opacity-50" : ""}">
+        <div class="card card-border bg-base-100 transition-all hover:border-primary hover:-translate-y-0.5 ${book.is_read ? "opacity-50" : ""}">
           <div class="card-body p-5">
             <div class="flex justify-between items-start gap-2">
               <h3 class="card-title text-base">
                 ${book.title}
-                ${isRead(book.id) ? '<span class="text-xs font-normal text-success"> — Lu</span>' : ""}
+                ${book.is_read ? '<span class="text-xs font-normal text-success"> — Lu</span>' : ""}
               </h3>
               <div class="flex items-center gap-1 shrink-0">
-                <button onclick="toggleRead('${book.id}')" class="btn btn-xs ${isRead(book.id) ? "btn-success" : "btn-outline"}" title="${isRead(book.id) ? "Marquer non lu" : "Marquer comme lu"}">
-                  ${isRead(book.id) ? "✓ Lu" : "Marquer lu"}
+                <button onclick="toggleRead(${book.id})" class="btn btn-xs ${book.is_read ? "btn-success" : "btn-outline"}" title="${book.is_read ? "Marquer non lu" : "Marquer comme lu"}">
+                  ${book.is_read ? "✓ Lu" : "Marquer lu"}
                 </button>
-                <button onclick="deleteBook('${book.id}')" class="btn btn-ghost btn-xs text-error" title="Supprimer">
+                <button onclick="deleteBook(${book.id})" class="btn btn-ghost btn-xs text-error" title="Supprimer">
                   ×
                 </button>
               </div>
@@ -833,18 +96,14 @@ function displayBooks() {
 }
 
 // --- Marquer comme lu ---
-function toggleRead(bookId) {
-  if (readBookIds.includes(bookId)) {
-    readBookIds = readBookIds.filter((id) => id !== bookId);
-  } else {
-    readBookIds.push(bookId);
-  }
-  saveReadBookIds(readBookIds);
+async function toggleRead(bookId) {
+  await api('read.php', 'POST', { id: bookId });
+  await loadBooks();
   displayBooks();
 }
 
 // --- Ajouter un livre ---
-function addBook() {
+async function addBook() {
   const titleEl = document.getElementById("book-title");
   const authorEl = document.getElementById("book-author");
   const genresEl = document.getElementById("book-genres");
@@ -852,7 +111,6 @@ function addBook() {
   const author = authorEl.value.trim();
   const genresInput = genresEl.value.trim();
 
-  // Reset error states
   titleEl.classList.remove("input-error");
   authorEl.classList.remove("input-error");
   genresEl.classList.remove("input-error");
@@ -875,23 +133,19 @@ function addBook() {
     .map((g) => g.trim())
     .filter((g) => g)
     .slice(0, 3);
-  const newBook = { title, author, genres, id: generateId({ title, author }) };
 
-  if (books.some((b) => b.id === newBook.id)) {
-    alert("Ce livre existe déjà dans votre bibliothèque.");
+  const result = await api('books.php', 'POST', { title, author, genres });
+
+  if (result.error) {
+    alert(result.error);
     return;
   }
-
-  books.push(newBook);
-
-  const userBooks = loadUserBooks();
-  userBooks.push(newBook);
-  saveUserBooks(userBooks);
 
   titleEl.value = "";
   authorEl.value = "";
   genresEl.value = "";
 
+  await loadBooks();
   displayBooks();
 
   const btn = event.target.closest(".btn") || event.target;
@@ -907,20 +161,9 @@ function addBook() {
 }
 
 // --- Supprimer un livre ---
-function deleteBook(bookId) {
-  books = books.filter((b) => b.id !== bookId);
-
-  const userBooks = loadUserBooks().filter((b) => b.id !== bookId);
-  saveUserBooks(userBooks);
-
-  if (challenge && challenge.bookIds.includes(bookId)) {
-    challenge.bookIds = challenge.bookIds.filter((id) => id !== bookId);
-    saveChallenge(challenge);
-  }
-
-  readBookIds = readBookIds.filter((id) => id !== bookId);
-  saveReadBookIds(readBookIds);
-
+async function deleteBook(bookId) {
+  await api('books.php', 'DELETE', { id: bookId });
+  await loadBooks();
   displayBooks();
 }
 
@@ -1000,7 +243,7 @@ function getRandomBook() {
 }
 
 // --- Challenge de lecture ---
-function createChallenge() {
+async function createChallenge() {
   const input = document.getElementById("challenge-goal");
   const goal = parseInt(input.value);
   if (!goal || goal < 1) {
@@ -1010,30 +253,29 @@ function createChallenge() {
     }, 2000);
     return;
   }
-  challenge = { goal, year: new Date().getFullYear(), bookIds: [] };
-  saveChallenge(challenge);
+  await api('challenge.php', 'POST', { goal });
+  await loadChallengeData();
   displayChallenge();
 }
 
-function deleteChallenge() {
+async function deleteChallenge() {
   if (!confirm("Supprimer le challenge en cours ?")) return;
+  await api('challenge.php', 'DELETE');
   challenge = null;
-  saveChallenge(null);
   displayChallenge();
 }
 
-function addToChallenge(bookId) {
+async function addToChallenge(bookId) {
   if (!challenge) return;
-  if (challenge.bookIds.includes(bookId)) return;
-  challenge.bookIds.push(bookId);
-  saveChallenge(challenge);
+  await api('challenge.php?action=add_book', 'POST', { book_id: bookId });
+  await loadChallengeData();
   displayChallenge();
 }
 
-function removeFromChallenge(bookId) {
+async function removeFromChallenge(bookId) {
   if (!challenge) return;
-  challenge.bookIds = challenge.bookIds.filter((id) => id !== bookId);
-  saveChallenge(challenge);
+  await api('challenge.php?action=remove_book', 'POST', { book_id: bookId });
+  await loadChallengeData();
   displayChallenge();
 }
 
@@ -1058,10 +300,8 @@ function displayChallenge() {
     return;
   }
 
-  const challengeBooks = challenge.bookIds
-    .map((id) => books.find((b) => b.id === id))
-    .filter(Boolean);
-  const readCount = challengeBooks.filter((b) => isRead(b.id)).length;
+  const challengeBooks = challenge.books || [];
+  const readCount = challengeBooks.filter((b) => b.is_read).length;
   const pct =
     challenge.goal > 0
       ? Math.min(100, Math.round((readCount / challenge.goal) * 100))
@@ -1079,19 +319,19 @@ function displayChallenge() {
     bookListHtml = challengeBooks
       .map(
         (book) => `
-        <div class="flex justify-between items-center p-3 bg-base-200 rounded-sm mb-2 border border-base-300 ${isRead(book.id) ? "opacity-50" : ""}">
+        <div class="flex justify-between items-center p-3 bg-base-200 rounded-sm mb-2 border border-base-300 ${book.is_read ? "opacity-50" : ""}">
           <div class="flex-1">
             <div class="font-medium text-sm">
               ${book.title}
-              ${isRead(book.id) ? '<span class="text-xs font-normal text-success"> — Lu</span>' : ""}
+              ${book.is_read ? '<span class="text-xs font-normal text-success"> — Lu</span>' : ""}
             </div>
             <div class="text-xs opacity-60">${book.author}</div>
           </div>
           <div class="flex items-center gap-1">
-            <button onclick="toggleRead('${book.id}'); displayChallenge();" class="btn btn-xs ${isRead(book.id) ? "btn-success" : "btn-outline"}" title="${isRead(book.id) ? "Marquer non lu" : "Marquer lu"}">
-              ${isRead(book.id) ? "✓ Lu" : "Marquer lu"}
+            <button onclick="toggleReadAndRefreshChallenge(${book.id})" class="btn btn-xs ${book.is_read ? "btn-success" : "btn-outline"}" title="${book.is_read ? "Marquer non lu" : "Marquer lu"}">
+              ${book.is_read ? "✓ Lu" : "Marquer lu"}
             </button>
-            <button onclick="removeFromChallenge('${book.id}')" class="btn btn-ghost btn-xs text-error" title="Retirer du challenge">
+            <button onclick="removeFromChallenge(${book.id})" class="btn btn-ghost btn-xs text-error" title="Retirer du challenge">
               ✕
             </button>
           </div>
@@ -1131,6 +371,12 @@ function displayChallenge() {
   `;
 }
 
+async function toggleReadAndRefreshChallenge(bookId) {
+  await api('read.php', 'POST', { id: bookId });
+  await Promise.all([loadBooks(), loadChallengeData()]);
+  displayChallenge();
+}
+
 // --- Sélecteur de livres pour le challenge ---
 function openBookSelector() {
   const modal = document.getElementById("book-selector-modal");
@@ -1153,11 +399,13 @@ function filterBookSelector() {
 
 function renderBookSelectorList(query) {
   const list = document.getElementById("book-selector-list");
-  const challengeIds = challenge ? challenge.bookIds : [];
+  const challengeBookIds = challenge && challenge.books
+    ? challenge.books.map((b) => b.id)
+    : [];
 
   const available = books.filter(
     (b) =>
-      !challengeIds.includes(b.id) &&
+      !challengeBookIds.includes(b.id) &&
       (b.title.toLowerCase().includes(query) ||
         b.author.toLowerCase().includes(query))
   );
@@ -1171,7 +419,7 @@ function renderBookSelectorList(query) {
   list.innerHTML = available
     .map(
       (book) => `
-      <div class="flex justify-between items-center p-3 rounded-sm mb-1 cursor-pointer transition-all border border-base-300 hover:border-primary" onclick="addToChallenge('${book.id}'); closeBookSelector(); displayChallenge();">
+      <div class="flex justify-between items-center p-3 rounded-sm mb-1 cursor-pointer transition-all border border-base-300 hover:border-primary" onclick="addToChallenge(${book.id}); closeBookSelector();">
         <div>
           <div class="font-medium text-sm">${book.title}</div>
           <div class="text-xs opacity-60">${book.author}</div>
@@ -1184,7 +432,7 @@ function renderBookSelectorList(query) {
 }
 
 // --- Initialisation ---
-document.addEventListener("DOMContentLoaded", () => {
-  initBooks();
+document.addEventListener("DOMContentLoaded", async () => {
+  await Promise.all([loadBooks(), loadChallengeData()]);
   displayBooks();
 });
