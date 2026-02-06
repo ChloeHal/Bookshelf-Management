@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ma Bibliothèque</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+
+      :root {
+        /* Colors */
+        --bg-primary: #e4e4e7;
+        --bg-secondary: #f2f2f2;
+        --bg-tertiary: #f8f8f8;
+        --border-color: #e4e4e7;
+        --text-primary: #3f3f47;
+        --text-secondary: #888889;
+        --text-muted: #888889;
+
+        /* Primary color (accent) */
+        --primary-500: #7af1a7;
+        --primary-600: #5aed92;
+        --primary-700: #35e97a;
+        --primary-400: #a3f5c2;
+
+        /* Spacing */
+        --spacing-xs: 0.25rem;
+        --spacing-sm: 0.5rem;
+        --spacing-md: 1rem;
+        --spacing-lg: 1.5rem;
+        --spacing-xl: 2rem;
+        --spacing-2xl: 3rem;
+
+        /* Border radius */
+        --radius-sm: 0.05rem;
+        --radius-md: 0.1rem;
+        --radius-lg: 0.15rem;
+
+        /* Transitions */
+        --transition: all 0.2s ease;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Lexend", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.6;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Container */
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: var(--spacing-md);
+      }
+
+      /* Header */
+      header {
+        text-align: center;
+        padding: var(--spacing-2xl) 0;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: -0.025em;
+        margin-bottom: var(--spacing-xl);
+        background: linear-gradient(
+          to right,
+          var(--text-primary),
+          var(--text-secondary)
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Navigation */
+      nav {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-xl);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--spacing-md);
+      }
+
+      .nav-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        font-weight: 500;
+        padding: var(--spacing-sm) var(--spacing-lg);
+        cursor: pointer;
+        position: relative;
+        transition: var(--transition);
+      }
+
+      .nav-btn:hover {
+        color: var(--text-primary);
+      }
+
+      .nav-btn.active {
+        color: var(--primary-500);
+      }
+
+      .nav-btn.active::after {
+        content: "";
+        position: absolute;
+        bottom: calc(-1 * var(--spacing-md) - 1px);
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-500);
+      }
+
+      /* Page containers */
+      .page {
+        display: none;
+        padding-top: var(--spacing-2xl);
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      .page.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Card */
+      .card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+      }
+
+      .card-title {
+        font-size: 1.125rem;
+        font-weight: 500;
+        margin-bottom: var(--spacing-lg);
+        color: var(--text-primary);
+      }
+
+      /* Form elements */
+      .form-grid {
+        display: grid;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+      }
+
+      @media (min-width: 768px) {
+        .form-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      .input {
+        width: 100%;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: var(--transition);
+      }
+
+      .input:focus {
+        outline: none;
+        border-color: var(--primary-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .input::placeholder {
+        color: var(--text-muted);
+      }
+
+      /* Buttons */
+      .btn {
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-size: 0.9rem;
+        font-weight: 500;
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+      }
+
+      .btn-primary {
+        background: var(--primary-500);
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-600);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      .btn-primary:active {
+        background: var(--primary-700);
+        transform: translateY(0);
+      }
+
+      .btn-full {
+        width: 100%;
+      }
+
+      .btn-delete {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: var(--spacing-xs);
+        font-size: 1.25rem;
+        line-height: 1;
+        transition: var(--transition);
+      }
+
+      .btn-delete:hover {
+        color: #ef4444;
+      }
+
+      /* Stats */
+      .stats {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+
+      .stats::before {
+        content: "📚";
+      }
+
+      /* Books grid */
+      .books-grid {
+        display: grid;
+        gap: var(--spacing-lg);
+      }
+
+      @media (min-width: 640px) {
+        .books-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .books-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      /* Book card */
+      .book-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        transition: var(--transition);
+        position: relative;
+      }
+
+      .book-card:hover {
+        border-color: var(--primary-500);
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .book-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: var(--spacing-sm);
+      }
+
+      .book-title {
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        flex: 1;
+        margin-right: var(--spacing-sm);
+      }
+
+      .book-author {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: var(--spacing-md);
+      }
+
+      /* Genre tags */
+      .genres {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+      }
+
+      .genre-tag {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        transition: var(--transition);
+      }
+
+      .genre-tag:hover {
+        border-color: var(--primary-500);
+        color: var(--primary-400);
+      }
+
+      /* Select */
+      .select {
+        width: 100%;
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-bottom: var(--spacing-lg);
+      }
+
+      .select:focus {
+        outline: none;
+        border-color: var(--primary-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .select option {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+      }
+
+      /* Random result */
+      .random-result {
+        display: none;
+        margin-top: var(--spacing-xl);
+        animation: slideIn 0.3s ease-out;
+      }
+
+      .random-result.show {
+        display: block;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .result-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--primary-400);
+        margin-bottom: var(--spacing-md);
+      }
+
+      /* Empty state */
+      .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: var(--spacing-2xl);
+        color: var(--text-muted);
+      }
+
+      .empty-icon {
+        font-size: 3rem;
+        margin-bottom: var(--spacing-md);
+        opacity: 0.5;
+      }
+
+      .empty-text {
+        font-size: 0.9rem;
+      }
+
+      /* Centered layout for random page */
+      .centered-container {
+        max-width: 500px;
+        margin: 0 auto;
+      }
+
+      /* Loading state */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .loading {
+        animation: pulse 2s infinite;
+      }
+
+      /* Responsive */
+      @media (max-width: 640px) {
+        h1 {
+          font-size: 2rem;
+        }
+
+        nav {
+          gap: var(--spacing-md);
+        }
+
+        .nav-btn {
+          font-size: 0.875rem;
+          padding: var(--spacing-xs) var(--spacing-md);
+        }
+      }
+    </style>
+  </head>
+   <body>
+    <div class="container">
+      <header>
+        <h1>Ma Bibliothèque</h1>
+        <nav>
+          <button class="nav-btn active" onclick="showPage('list-page')">
+            Tous mes livres
+          </button>
+          <button class="nav-btn" onclick="showPage('random-page')">
+            Livre aléatoire
+          </button>
+        </nav>
+      </nav>
+      </header>
+
+      <!-- Page Liste des Livres -->
+      <div id="list-page" class="page active">
+        <!-- Formulaire d'ajout (désactivé dans ton exemple) -->
+        <!--
+        <div class="card">
+          <h2 class="card-title">Ajouter un livre</h2>
+          <div class="form-grid">
+            <input type="text" id="book-title" class="input" placeholder="Titre du livre" />
+            <input type="text" id="book-author" class="input" placeholder="Auteur" />
+            <input type="text" id="book-genres" class="input" placeholder="Genres (max 3, virgules)" />
+          </div>
+          <button onclick="addBook()" class="btn btn-primary">
+            <span>Ajouter à la bibliothèque</span>
+          </button>
+        </div>
+        -->
+
+        <!-- Statistiques -->
+        <div id="stats" class="stats"></div>
+
+        <!-- Grille des livres -->
+        <div id="books-container" class="books-grid"></div>
+      </div>
+
+      <!-- Page Livre Aléatoire -->
+      <div id="random-page" class="page">
+        <div class="centered-container">
+          <div class="card">
+            <h2 class="card-title">Découvrir un livre</h2>
+            <select id="genre-select" class="select">
+              <option value="">Sélectionner un genre</option>
+            </select>
+            <button onclick="getRandomBook()" class="btn btn-primary btn-full">
+              Obtenir une suggestion
+            </button>
+          </div>
+
+          <!-- Résultat aléatoire -->
+          <div id="random-result" class="random-result">
+            <div class="card">
+              <div class="result-label">Suggestion de lecture</div>
+              <div id="random-book-content"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Liste statique des livres (JSON)
+      let books = [
+  {
+    "title": "Kallocaïne",
+    "author": "Karin Boye",
+    "genres": ["Dystopie", "Science-fiction", "Anticipation"]
+  },
+  {
+    "title": "Après le monde",
+    "author": "Antoinette Rychner",
+    "genres": ["Post-apocalyptique", "Dystopie", "Écoféministe", "Collapsologie"]
+  },
+  {
+    "title": "Dans la forêt",
+    "author": "Jean Hegland",
+    "genres": ["Post-apocalyptique", "Nature writing", "Roman d'apprentissage", "Survie"]
+  },
+  {
+    "title": "Ubik",
+    "author": "Philip K. Dick",
+    "genres": ["Science-fiction", "Dystopie", "Philosophique", "Paranormal"]
+  },
+  {
+    "title": "2054",
+    "author": "Elliot Ackerman",
+    "genres": ["Thriller", "Anticipation", "Géopolitique", "Science-fiction"]
+  },
+  {
+    "title": "Lux",
+    "author": "Maxime Chattam",
+    "genres": ["Thriller", "Anticipation", "Post-apocalyptique", "Science-fiction"]
+  },
+  {
+    "title": "Le gang de la clef à molette",
+    "author": "Edward Abbey",
+    "genres": ["Roman", "Écologie", "Aventure", "Satire"]
+  },
+  {
+    "title": "Sans âme",
+    "author": "Charlotte Heuse",
+    "genres": ["Roman", "Fantastique", "Drame"]
+  },
+  {
+    "title": "Babel",
+    "author": "R.F. Kuang",
+    "genres": ["Fantasy", "Historique", "Dark Academia", "Politique"]
+  },
+  {
+    "title": "Le Temps des sorcières",
+    "author": "Alix E. Harrow",
+    "genres": ["Fantasy", "Féministe", "Historique", "Surnaturel"]
+  },
+  {
+    "title": "Celle qui devint le soleil",
+    "author": "Shelley Parker-Chan",
+    "genres": ["Fantasy", "Historique", "Chine", "Épique"]
+  },
+  {
+    "title": "Un monde après l'autre",
+    "author": "Jodi Taylor",
+    "genres": ["Science-fiction", "Voyage dans le temps", "Humour", "Aventure"]
+  },
+  {
+    "title": "Jane Eyre",
+    "author": "Charlotte Brontë",
+    "genres": ["Classique", "Romance", "Gothique", "Victorien"]
+  },
+  {
+    "title": "Furies",
+    "author": "Julie Ruocco",
+    "genres": ["Thriller", "Polar", "Psychologique"]
+  },
+  {
+    "title": "Camille, 1815",
+    "author": "Armand Clery",
+    "genres": ["Historique", "Roman", "France"]
+  },
+  {
+    "title": "Le Roi et l'horloger",
+    "author": "Arnaldur Indriðason",
+    "genres": ["Polar", "Islandais", "Mystère", "Crime"]
+  },
+  {
+    "title": "La Couturière de Dachau",
+    "author": "Mary Chamberlain",
+    "genres": ["Historique", "Seconde Guerre mondiale", "Drame", "Biographique"]
+  },
+  {
+    "title": "Le non de Klara",
+    "author": "Soazig Aaron",
+    "genres": ["Roman", "Féministe", "Contemporain", "Psychologique"]
+  },
+  {
+    "title": "Le Grand Feu",
+    "author": "Léonor de Récondo",
+    "genres": ["Roman", "Historique", "Drame", "Littéraire"]
+  },
+  {
+    "title": "Mendelssohn est sur le toit",
+    "author": "Jiří Weil",
+    "genres": ["Historique", "Seconde Guerre mondiale", "Roman tchèque", "Satire"]
+  },
+  {
+    "title": "Les Passeurs de livres de Daraya",
+    "author": "Delphine Minoui",
+    "genres": ["Documentaire", "Guerre", "Syrie", "Témoignage"]
+  },
+  {
+    "title": "Jeanne Seymour : La Reine bien-aimée",
+    "author": "Alison Weir",
+    "genres": ["Historique", "Biographie", "Tudor", "Romance"]
+  },
+  {
+    "title": "Madame Pylinska et le secret de Chopin",
+    "author": "Éric-Emmanuel Schmitt",
+    "genres": ["Roman", "Musique", "Philosophique", "Littéraire"]
+  },
+  {
+    "title": "La Librairie des chats noirs",
+    "author": "Piergiorgio Pulixi",
+    "genres": ["Polar", "Italien", "Mystère", "Thriller"]
+  },
+  {
+    "title": "L'Empreinte",
+    "author": "Alexandria Marzano-Lesnevich",
+    "genres": ["True Crime", "Mémoire", "Justice", "Documentaire"]
+  },
+  {
+    "title": "Rouge Karma",
+    "author": "Jean-Christophe Grangé",
+    "genres": ["Thriller", "Polar", "Mystique", "Action"]
+  },
+  {
+    "title": "Metropolis",
+    "author": "Philip Kerr",
+    "genres": ["Polar historique", "Berlin", "Noir", "Crime"]
+  },
+  {
+    "title": "Nous étions le sel de la mer",
+    "author": "Roxanne Bouchard",
+    "genres": ["Roman québécois", "Drame", "Maritime", "Psychologique"]
+  },
+  {
+    "title": "Le mari parfait d'Agatha Christie",
+    "author": "Bénédicte Jourgeaud",
+    "genres": ["Biographie romancée", "Historique", "Mystère", "Littéraire"]
+  },
+  {
+    "title": "Le Maître des énigmes",
+    "author": "Danielle Trussoni",
+    "genres": ["Thriller", "Mystère", "Aventure", "Ésotérique"]
+  },
+  {
+    "title": "Le Dernier inventeur",
+    "author": "Héloïse Guay de Bellissen",
+    "genres": ["Roman", "Historique", "Science", "Aventure"]
+  },
+  {
+    "title": "Là où chantent les écrevisses",
+    "author": "Delia Owens",
+    "genres": ["Roman", "Nature writing", "Mystère", "Coming-of-age"]
+  },
+  {
+    "title": "Cinq coeurs en sursis",
+    "author": "Laure Manel",
+    "genres": ["Romance", "Contemporain", "Feel-good", "Drame"]
+  },
+  {
+    "title": "Petites boîtes",
+    "author": "Yōko Ogawa",
+    "genres": ["Roman japonais", "Littéraire", "Mélancolique", "Poétique"]
+  },
+  {
+    "title": "Qu'importe la couleur du ciel",
+    "author": "Valérie Cohen",
+    "genres": ["Roman", "Contemporain", "Drame", "Psychologique"]
+  },
+  {
+    "title": "La vérité sur la lumière",
+    "author": "Auður Ava Ólafsdóttir",
+    "genres": ["Roman islandais", "Littéraire", "Poétique", "Nature"]
+  },
+  {
+    "title": "Noël surprise dans les Highlands",
+    "author": "Sarah Morgan",
+    "genres": ["Romance", "Noël", "Feel-good", "Écossais"]
+  },
+  {
+    "title": "Rhapsodie balkanique",
+    "author": "Maria Kassimova-Moisset",
+    "genres": ["Roman", "Balkans", "Historique", "Culturel"]
+  },
+  {
+    "title": "La vie avant l'homme",
+    "author": "Margaret Atwood",
+    "genres": ["Roman", "Psychologique", "Canadien", "Féministe"]
+  },
+  {
+    "title": "Le Prince à la petite tasse",
+    "author": "Emilie de Turckheim",
+    "genres": ["Roman", "Conte moderne", "Fantaisie", "Humour"]
+  },
+  {
+    "title": "Bimbo: Repenser les normes de la féminité",
+    "author": "Edie Blanchard",
+    "genres": ["Essai", "Féminisme", "Sociologie", "Culture populaire"]
+  },
+  {
+    "title": "Psychogénéalogie",
+    "author": "Anne Ancelin Schützenberger",
+    "genres": ["Psychologie", "Thérapie", "Famille", "Développement personnel"]
+  },
+  {
+    "title": "Nous sommes tous des féministes",
+    "author": "Chimamanda Ngozi Adichie",
+    "genres": ["Essai", "Féminisme", "Société", "Manifeste"]
+  },
+  {
+    "title": "Ni vues ni connues",
+    "author": "Collectif Georgette Sand",
+    "genres": ["Histoire", "Féminisme", "Biographies", "Société"]
+  },
+  {
+    "title": "Histoire des préjugés",
+    "author": "Jeanne Guérout",
+    "genres": ["Histoire", "Sociologie", "Essai", "Culture"]
+  },
+  {
+    "title": "Le livre des haïku",
+    "author": "Jack Kerouac",
+    "genres": ["Poésie", "Haïku", "Beat Generation", "Zen"]
+  },
+  {
+    "title": "The Best of Europe for Women",
+    "author": "Choisir la cause des femmes",
+    "genres": ["Essai", "Féminisme", "Europe", "Politique"]
+  },
+  {
+    "title": "Les grandes oubliées",
+    "author": "Titiou Lecoq",
+    "genres": ["Histoire", "Féminisme", "Biographies", "Essai"]
+  },
+  {
+    "title": "Le deuxième sexe, I",
+    "author": "Simone de Beauvoir",
+    "genres": ["Philosophie", "Féminisme", "Essai", "Classique"]
+  },
+  {
+    "title": "Ces hommes qui m'expliquent la vie",
+    "author": "Rebecca Solnit",
+    "genres": ["Essai", "Féminisme", "Société", "Culture"]
+  },
+  {
+    "title": "Pourquoi les Kevin ne deviennent pas médecins",
+    "author": "Étienne Guertin-Tardif",
+    "genres": ["Sociologie", "Essai", "Société", "Québécois"]
+  },
+  {
+    "title": "Né d'aucune femme",
+    "author": "Franck Bouysse",
+    "genres": ["Roman", "Noir", "Rural", "Drame"]
+  },
+  {
+    "title": "Les Hauts de Hurlevent",
+    "author": "Emily Brontë",
+    "genres": ["Classique", "Gothique", "Romance", "Victorien"]
+  },
+  {
+    "title": "L'Île au trésor",
+    "author": "Robert Louis Stevenson",
+    "genres": ["Aventure", "Classique", "Pirates", "Jeunesse"]
+  },
+  {
+    "title": "Le coût de la virilité",
+    "author": "Lucile Peytavin",
+    "genres": ["Essai", "Sociologie", "Féminisme", "Économie"]
+  },
+  {
+    "title": "Clytemnestra",
+    "author": "Costanza Casati",
+    "genres": ["Mythologie", "Historique", "Féministe", "Grèce antique"]
+  },
+  {
+    "title": "Moi qui n'ai pas connu les hommes",
+    "author": "Jacqueline Harpman",
+    "genres": ["Science-fiction", "Dystopie", "Féministe", "Philosophique"]
+  },
+  {
+    "title": "Ariadne",
+    "author": "Jennifer Saint",
+    "genres": ["Mythologie", "Fantasy", "Féministe", "Grèce antique"]
+  },
+  {
+    "title": "La brillante destinée d'Elizabeth Zott",
+    "author": "Bonnie Garmus",
+    "genres": ["Roman", "Féministe", "Humour", "Années 60"]
+  },
+  {
+    "title": "Dry",
+    "author": "Neal Shusterman",
+    "genres": ["Young Adult", "Dystopie", "Survie", "Écologie"]
+  },
+  {
+    "title": "La Reine du noir",
+    "author": "Julia Bartz",
+    "genres": ["Thriller", "Mystère", "Psychologique", "Huis clos"]
+  },
+  {
+    "title": "Sublime Royaume",
+    "author": "Yaa Gyasi",
+    "genres": ["Roman", "Famille", "Ghana", "Diaspora"]
+  },
+  {
+    "title": "American Gods",
+    "author": "Neil Gaiman",
+    "genres": ["Fantasy", "Mythologie", "Urban Fantasy", "Épique"]
+  },
+  {
+    "title": "Les Pirates de Dieu",
+    "author": "François-Henri Soulié",
+    "genres": ["Historique", "Aventure", "Maritime", "Religion"]
+  },
+  {
+    "title": "Les Contemplées",
+    "author": "Pauline Hillier",
+    "genres": ["Roman", "Féministe", "Contemporain", "Philosophique"]
+  },
+  {
+    "title": "La prophétesse voilée",
+    "author": "Jean d'Aillon",
+    "genres": ["Historique", "Mystère", "France", "17e siècle"]
+  },
+  {
+    "title": "Le Soleil des Scorta",
+    "author": "Laurent Gaudé",
+    "genres": ["Roman", "Saga familiale", "Italie", "Drame"]
+  },
+  {
+    "title": "Kim Jiyoung, Born 1982",
+    "author": "Cho Nam-Joo",
+    "genres": ["Roman coréen", "Féministe", "Société", "Contemporain"]
+  },
+  {
+    "title": "Les Naufragés du Wager",
+    "author": "David Grann",
+    "genres": ["Histoire", "Maritime", "Aventure", "Survie"]
+  },
+  {
+    "title": "Perspective",
+    "author": "Laurent Binet",
+    "genres": ["Roman", "Historique", "Art", "Renaissance"]
+  },
+  {
+    "title": "Les Hirondelles de Kaboul",
+    "author": "Yasmina Khadra",
+    "genres": ["Roman", "Afghanistan", "Guerre", "Drame"]
+  },
+  {
+    "title": "Les sorcières de Vardø",
+    "author": "Anya Bergman",
+    "genres": ["Historique", "Sorcellerie", "Norvège", "Féministe"]
+  },
+  {
+    "title": "L'Île des âmes",
+    "author": "Piergiorgio Pulixi",
+    "genres": ["Thriller", "Noir", "Sardaigne", "Mystère"]
+  },
+  {
+    "title": "La Septième Lune",
+    "author": "Piergiorgio Pulixi",
+    "genres": ["Thriller", "Noir", "Italien", "Mystère"]
+  },
+  {
+    "title": "Lucia",
+    "author": "Bernard Minier",
+    "genres": ["Thriller", "Polar", "Psychologique", "Suspense"]
+  },
+  {
+    "title": "Les Graciées",
+    "author": "Kiran Millwood Hargrave",
+    "genres": ["Historique", "Féministe", "Sorcellerie", "17e siècle"]
+  },
+  {
+    "title": "Les Jardins de Zagarand",
+    "author": "Eric de Kermel",
+    "genres": ["Roman", "Orient", "Spirituel", "Philosophique"]
+  },
+  {
+    "title": "Women and Other Monsters",
+    "author": "Jess Zimmerman",
+    "genres": ["Essai", "Mythologie", "Féminisme", "Culture"]
+  },
+  {
+    "title": "L'Énigme de Turnglass",
+    "author": "Gareth Rubin",
+    "genres": ["Mystère", "Historique", "Victorien", "Thriller"]
+  },
+  {
+    "title": "Off With Her Head",
+    "author": "Eleanor Herman",
+    "genres": ["Histoire", "Féminisme", "Biographies", "Pouvoir"]
+  },
+  {
+    "title": "La Parabole des talents",
+    "author": "Octavia E. Butler",
+    "genres": ["Science-fiction", "Dystopie", "Afrofuturisme", "Post-apocalyptique"]
+  },
+  {
+    "title": "La Parabole du semeur",
+    "author": "Octavia E. Butler",
+    "genres": ["Science-fiction", "Dystopie", "Afrofuturisme", "Post-apocalyptique"]
+  },
+  {
+    "title": "Beauté fatale",
+    "author": "Mona Chollet",
+    "genres": ["Essai", "Féminisme", "Sociologie", "Beauté"]
+  },
+  {
+    "title": "Les Dieux du tango",
+    "author": "Carolina De Robertis",
+    "genres": ["Roman", "Historique", "Argentine", "LGBTQ+"]
+  },
+  {
+    "title": "Noir comme la mer",
+    "author": "Mary Higgins Clark",
+    "genres": ["Thriller", "Suspense", "Mystère", "Crime"]
+  },
+  {
+    "title": "Le Pavillon des orphelines",
+    "author": "Joanna Goodman",
+    "genres": ["Historique", "Canada", "Drame", "Famille"]
+  },
+  {
+    "title": "L'aile des vierges",
+    "author": "Laurence Peyrin",
+    "genres": ["Historique", "Romance", "France", "19e siècle"]
+  },
+  {
+    "title": "My Absolute Darling",
+    "author": "Gabriel Tallent",
+    "genres": ["Thriller", "Psychologique", "Coming-of-age", "Survie"]
+  },
+  {
+    "title": "Tu me manques",
+    "author": "Harlan Coben",
+    "genres": ["Thriller", "Suspense", "Mystère", "Crime"]
+  },
+  {
+    "title": "Le Tueur aveugle",
+    "author": "Margaret Atwood",
+    "genres": ["Roman", "Dystopie", "Science-fiction", "Féministe"]
+  },
+  {
+    "title": "Les Sept Morts d'Evelyn Hardcastle",
+    "author": "Stuart Turton",
+    "genres": ["Mystère", "Science-fiction", "Thriller", "Énigme"]
+  },
+  {
+    "title": "Les meufs c'est des mecs bien",
+    "author": "Mourad Winter",
+    "genres": ["Humour", "Essai", "Société", "Stand-up"]
+  },
+  {
+    "title": "Marques de fabrique",
+    "author": "Cecile Baudin",
+    "genres": ["Roman", "Terroir", "France", "Social"]
+  },
+  {
+    "title": "Juliette et les Cézanne",
+    "author": "Jean d'Aillon",
+    "genres": ["Historique", "Mystère", "Art", "France"]
+  },
+  {
+    "title": "Nos pères, nos frères, nos amis",
+    "author": "Mathieu Palain",
+    "genres": ["Documentaire", "Société", "Violence", "Masculinité"]
+  },
+  {
+    "title": "Seule en sa demeure",
+    "author": "Cécile Coulon",
+    "genres": ["Roman", "Noir", "Rural", "Gothique"]
+  },
+  {
+    "title": "The Fuck-Up",
+    "author": "Arthur Nersesian",
+    "genres": ["Roman", "Urban", "New York", "Coming-of-age"]
+  },
+  {
+    "title": "The Da Vinci Code",
+    "author": "Dan Brown",
+    "genres": ["Thriller", "Mystère", "Ésotérique", "Aventure"]
+  },
+  {
+    "title": "Les Promises",
+    "author": "Jean-Christophe Grangé",
+    "genres": ["Thriller", "Polar", "Mystère", "Suspense"]
+  },
+  {
+    "title": "Poirot Halloween",
+    "author": "Agatha Christie",
+    "genres": ["Mystère", "Policier", "Classique", "Whodunit"]
+  },
+  {
+    "title": "Au NON des femmes",
+    "author": "Jennifer Tamas",
+    "genres": ["Essai", "Féminisme", "Littérature", "Critique"]
+  },
+  {
+    "title": "Le Silence des vaincues",
+    "author": "Pat Barker",
+    "genres": ["Historique", "Guerre", "Mythologie", "Féministe"]
+  },
+  {
+    "title": "Le Maître du Haut Château",
+    "author": "Philip K. Dick",
+    "genres": ["Science-fiction", "Uchronie", "Dystopie", "Alternatif"]
+  },
+  {
+    "title": "Le roi transparent",
+    "author": "Rosa Montero",
+    "genres": ["Fantasy", "Historique", "Médiéval", "Féministe"]
+  },
+  {
+    "title": "Ne tirez pas sur l'oiseau moqueur",
+    "author": "Harper Lee",
+    "genres": ["Classique", "Drame", "Justice", "Américain"]
+  },
+  {
+    "title": "Je crois que j'ai tué ma femme",
+    "author": "Frasse Mikardsson",
+    "genres": ["Thriller", "Noir", "Psychologique", "Suédois"]
+  },
+  {
+    "title": "Les hommes ont peur de la lumière",
+    "author": "Douglas Kennedy",
+    "genres": ["Roman", "Psychologique", "Contemporain", "Drame"]
+  },
+  {
+    "title": "Artemisia",
+    "author": "Alexandra Lapierre",
+    "genres": ["Biographie romancée", "Art", "Renaissance", "Féministe"]
+  },
+  {
+    "title": "Humus",
+    "author": "Gaspard Kœnig",
+    "genres": ["Roman", "Philosophique", "Écologie", "Politique"]
+  },
+  {
+    "title": "La Mariée portait des bottes jaunes",
+    "author": "Katherine Pancol",
+    "genres": ["Romance", "Contemporain", "Humour", "Feel-good"]
+  },
+  {
+    "title": "Les voleurs d'innocence",
+    "author": "Sarai Walker",
+    "genres": ["Roman", "Féministe", "Thriller", "Social"]
+  },
+  {
+    "title": "Le Portrait de mariage",
+    "author": "Maggie O'Farrell",
+    "genres": ["Historique", "Art", "Renaissance", "Biographique"]
+  },
+  {
+    "title": "L'École aux oiseaux",
+    "author": "Clare Beams",
+    "genres": ["Roman", "Gothique", "Historique", "Mystère"]
+  },
+  {
+    "title": "La Collectionneuse des mots oubliés",
+    "author": "Pip Williams",
+    "genres": ["Historique", "Féministe", "Linguistique", "Victorien"]
+  },
+  {
+    "title": "Eon et le douzième dragon",
+    "author": "Alison Goodman",
+    "genres": ["Fantasy", "Young Adult", "Dragons", "Asiatique"]
+  },
+  {
+    "title": "Les Fiancés de l'hiver",
+    "author": "Christelle Dabos",
+    "genres": ["Fantasy", "Young Adult", "Steampunk", "Romance"]
+  },
+  {
+    "title": "The Calling",
+    "author": "James Frey",
+    "genres": ["Young Adult", "Science-fiction", "Dystopie", "Aventure"]
+  },
+  {
+    "title": "Chapterhouse: Dune",
+    "author": "Frank Herbert",
+    "genres": ["Science-fiction", "Space Opera", "Épique", "Philosophique"]
+  },
+  {
+    "title": "Heretics of Dune",
+    "author": "Frank Herbert",
+    "genres": ["Science-fiction", "Space Opera", "Épique", "Philosophique"]
+  },
+  {
+    "title": "God Emperor of Dune",
+    "author": "Frank Herbert",
+    "genres": ["Science-fiction", "Space Opera", "Épique", "Philosophique"]
+  },
+  {
+    "title": "Les Hauts de Hurlevent",
+    "author": "Brontë, Emily",
+    "genres": ["Classique", "Roman gothique"],
+  },
+  {
+    "title": "L'Île au trésor",
+    "author": "Stevenson, Robert Louis",
+    "genres": ["Aventure", "Classique"],
+  },
+]
+;
+
+      // Fonction pour afficher une page
+      function showPage(pageId) {
+        document.querySelectorAll(".page").forEach((page) => {
+          page.classList.remove("active");
+        });
+        document.querySelectorAll(".nav-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        document.getElementById(pageId).classList.add("active");
+        event.target.classList.add("active");
+
+        if (pageId === "random-page") {
+          updateGenreSelect();
+          document.getElementById("random-result").classList.remove("show");
+        }
+        if (pageId === "list-page") {
+          displayBooks();
+        }
+      }
+
+      // Fonction pour afficher tous les livres
+      function displayBooks() {
+        const container = document.getElementById("books-container");
+        const stats = document.getElementById("stats");
+
+        if (books.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📚</div>
+              <p class="empty-text">Votre bibliothèque est vide</p>
+            </div>
+          `;
+          stats.textContent = "";
+          return;
+        }
+
+        stats.textContent = `${books.length} livre${books.length > 1 ? "s" : ""} dans votre collection`;
+
+        container.innerHTML = books
+          .map(
+            (book, index) => `
+              <div class="book-card">
+                <div class="book-header">
+                  <h3 class="book-title">${book.title}</h3>
+                  <button onclick="deleteBook(${index})" class="btn-delete" title="Supprimer">
+                    ×
+                  </button>
+                </div>
+                <p class="book-author">${book.author}</p>
+                <div class="genres">
+                  ${book.genres
+                    .map(
+                      (genre) => `
+                        <span class="genre-tag">${genre}</span>
+                      `
+                    )
+                    .join("")}
+                </div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      // Fonction pour ajouter un livre (désactivée dans ton exemple)
+      function addBook() {
+        const title = document.getElementById("book-title").value.trim();
+        const author = document.getElementById("book-author").value.trim();
+        const genresInput = document.getElementById("book-genres").value.trim();
+
+        if (!title || !author || !genresInput) {
+          if (!title) document.getElementById("book-title").style.borderColor = "#ef4444";
+          if (!author) document.getElementById("book-author").style.borderColor = "#ef4444";
+          if (!genresInput) document.getElementById("book-genres").style.borderColor = "#ef4444";
+
+          setTimeout(() => {
+            document.getElementById("book-title").style.borderColor = "";
+            document.getElementById("book-author").style.borderColor = "";
+            document.getElementById("book-genres").style.borderColor = "";
+          }, 2000);
+          return;
+        }
+
+        const genres = genresInput.split(",").map((g) => g.trim()).slice(0, 3);
+        const newBook = { title: title, author: author, genres: genres };
+        books.push(newBook);
+
+        // Réinitialiser le formulaire
+        document.getElementById("book-title").value = "";
+        document.getElementById("book-author").value = "";
+        document.getElementById("book-genres").value = "";
+
+        // Afficher les livres mis à jour
+        displayBooks();
+
+        // Animation de confirmation
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "<span>✓ Ajouté</span>";
+        btn.style.background = "#10b981";
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = "";
+        }, 1500);
+      }
+
+      // Fonction pour supprimer un livre
+      function deleteBook(index) {
+        books.splice(index, 1);
+        displayBooks();
+      }
+
+      // Fonction pour mettre à jour le sélecteur de genres
+      function updateGenreSelect() {
+        const select = document.getElementById("genre-select");
+        const allGenres = new Set();
+
+        books.forEach((book) => {
+          book.genres.forEach((genre) => allGenres.add(genre));
+        });
+
+        select.innerHTML = '<option value="">Sélectionner un genre</option>';
+
+        if (allGenres.size === 0) {
+          select.innerHTML += '<option value="" disabled>Aucun genre disponible</option>';
+          return;
+        }
+
+        Array.from(allGenres)
+          .sort()
+          .forEach((genre) => {
+            const count = books.filter((book) => book.genres.includes(genre)).length;
+            select.innerHTML += `<option value="${genre}">${genre} (${count})</option>`;
+          });
+      }
+
+      // Fonction pour obtenir un livre aléatoire
+      function getRandomBook() {
+        const selectedGenre = document.getElementById("genre-select").value;
+        const resultDiv = document.getElementById("random-result");
+        const contentDiv = document.getElementById("random-book-content");
+
+        if (!selectedGenre) {
+          const select = document.getElementById("genre-select");
+          select.style.borderColor = "#ef4444";
+          setTimeout(() => {
+            select.style.borderColor = "";
+          }, 2000);
+          return;
+        }
+
+        const filteredBooks = books.filter((book) => book.genres.includes(selectedGenre));
+
+        if (filteredBooks.length === 0) {
+          contentDiv.innerHTML = `
+            <p style="color: var(--text-secondary); text-align: center;">
+              Aucun livre trouvé pour ce genre
+            </p>
+          `;
+          resultDiv.classList.add("show");
+          return;
+        }
+
+        const randomBook = filteredBooks[Math.floor(Math.random() * filteredBooks.length)];
+
+        resultDiv.classList.remove("show");
+        setTimeout(() => {
+          contentDiv.innerHTML = `
+            <h3 class="book-title" style="font-size: 1.25rem; margin-bottom: 0.5rem;">
+              ${randomBook.title}
+            </h3>
+            <p class="book-author" style="margin-bottom: 1rem;">
+              ${randomBook.author}
+            </p>
+            <div class="genres">
+              ${randomBook.genres
+                .map(
+                  (genre) => `
+                    <span class="genre-tag">${genre}</span>
+                  `
+                )
+                .join("")}
+            </div>
+          `;
+          resultDiv.classList.add("show");
+        }, 100);
+      }
+
+      // Initialiser la page au chargement
+      document.addEventListener("DOMContentLoaded", () => {
+        displayBooks();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "books": [
+    {
+      "title": "Le Seigneur des Anneaux",
+      "author": "J.R.R. Tolkien",
+      "genres": ["Fantastique", "Aventure", "Épique"]
+    },
+    {
+      "title": "Dune",
+      "author": "Frank Herbert",
+      "genres": ["Science-fiction", "Politique", "Écologie"]
+    },
+    {
+      "title": "Les Misérables",
+      "author": "Victor Hugo",
+      "genres": ["Classique", "Historique", "Social"]
+    },
+    {
+      "title": "Le Nom de la Rose",
+      "author": "Umberto Eco",
+      "genres": ["Mystère", "Historique", "Philosophique"]
+    },
+    {
+      "title": "Cent ans de solitude",
+      "author": "Gabriel García Márquez",
+      "genres": ["Réalisme magique", "Littéraire", "Latino-américain"]
+    },
+    {
+      "title": "La Horde du Contrevent",
+      "author": "Alain Damasio",
+      "genres": ["Science-fiction", "Aventure", "Poétique"]
+    },
+    {
+      "title": "Le Petit Prince",
+      "author": "Antoine de Saint-Exupéry",
+      "genres": ["Conte", "Philosophique", "Jeunesse"]
+    },
+    {
+      "title": "1984",
+      "author": "George Orwell",
+      "genres": ["Dystopie", "Science-fiction", "Politique"]
+    },
+    {
+      "title": "L'Étranger",
+      "author": "Albert Camus",
+      "genres": ["Roman", "Philosophique", "Absurde"]
+    },
+    {
+      "title": "Harry Potter à l'école des sorciers",
+      "author": "J.K. Rowling",
+      "genres": ["Fantastique", "Jeunesse", "Magie"]
+    },
+    {
+      "title": "Le Parfum",
+      "author": "Patrick Süskind",
+      "genres": ["Thriller", "Historique", "Psychologique"]
+    },
+    {
+      "title": "Fondation",
+      "author": "Isaac Asimov",
+      "genres": ["Science-fiction", "Space-opera", "Psychohistoire"]
+    }
+  ]
+}
