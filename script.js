@@ -58,7 +58,18 @@ function displayBooks() {
     return;
   }
 
-  stats.innerHTML = `📚 ${books.length} livre${books.length > 1 ? "s" : ""} dans votre collection`;
+  const readCount = books.filter((b) => b.is_read).length;
+  const readPct = Math.round((readCount / books.length) * 100);
+
+  stats.innerHTML = `
+    <div class="flex flex-col gap-2 w-full">
+      <div class="flex justify-between text-sm">
+        <span>📚 ${books.length} livre${books.length > 1 ? "s" : ""} dans votre collection</span>
+        <span>${readCount} lu${readCount > 1 ? "s" : ""} — ${readPct}%</span>
+      </div>
+      <progress class="progress progress-primary w-full" value="${readPct}" max="100"></progress>
+    </div>
+  `;
 
   container.innerHTML = books
     .map(
