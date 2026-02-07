@@ -1,10 +1,10 @@
 <?php
 // === Configuration BDD ===
-// À modifier avec vos identifiants Hostinger
+// Copier ce fichier en config.php et remplir avec vos identifiants
 $host = 'localhost';
-$dbname = 'u103504870_reading';
-$user = 'u103504870_reading';
-$password = 'o4?orOcN';
+$dbname = 'VOTRE_NOM_BDD';
+$user = 'VOTRE_UTILISATEUR';
+$password = 'VOTRE_MOT_DE_PASSE';
 
 try {
     $pdo = new PDO(
