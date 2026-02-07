@@ -431,6 +431,21 @@ function renderBookSelectorList(query) {
     .join("");
 }
 
+// --- Exposer les fonctions au scope global (nécessaire pour onclick en mode module) ---
+window.showPage = showPage;
+window.addBook = addBook;
+window.deleteBook = deleteBook;
+window.toggleRead = toggleRead;
+window.getRandomBook = getRandomBook;
+window.createChallenge = createChallenge;
+window.deleteChallenge = deleteChallenge;
+window.addToChallenge = addToChallenge;
+window.removeFromChallenge = removeFromChallenge;
+window.toggleReadAndRefreshChallenge = toggleReadAndRefreshChallenge;
+window.openBookSelector = openBookSelector;
+window.closeBookSelector = closeBookSelector;
+window.filterBookSelector = filterBookSelector;
+
 // --- Initialisation ---
 document.addEventListener("DOMContentLoaded", async () => {
   await Promise.all([loadBooks(), loadChallengeData()]);
