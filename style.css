@@ -1,9 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+@import "tailwindcss";
 
-/* Custom DaisyUI theme */
-:root:has(input.theme-controller[value="daisysword"]:checked),
-[data-theme="daisysword"] {
-  color-scheme: "light";
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "daisysword";
+  default: true;
+  color-scheme: light;
   --color-base-100: oklch(96% 0.003 264.542);
   --color-base-200: oklch(92% 0.006 264.531);
   --color-base-300: oklch(87% 0.01 258.338);
