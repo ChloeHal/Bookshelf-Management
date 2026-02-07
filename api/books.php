@@ -5,7 +5,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
-        $stmt = $pdo->query('SELECT id, title, author, genres, is_read FROM books ORDER BY created_at DESC');
+        $stmt = $pdo->query('SELECT id, title, author, genres, is_read FROM books ORDER BY title ASC');
         $books = $stmt->fetchAll();
         foreach ($books as &$book) {
             $book['id'] = (int) $book['id'];
