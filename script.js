@@ -232,16 +232,17 @@ function getRandomBook() {
     return;
   }
 
-  const randomBook =
-    filteredBooks[Math.floor(Math.random() * filteredBooks.length)];
+  resultDiv.classList.remove("hidden");
 
-  resultDiv.classList.add("hidden");
-  setTimeout(() => {
+  let count = 0;
+  const totalSpins = 15;
+  const interval = setInterval(() => {
+    const random = filteredBooks[Math.floor(Math.random() * filteredBooks.length)];
     contentDiv.innerHTML = `
-      <h3 class="font-medium text-lg mb-2">${randomBook.title}</h3>
-      <p class="text-sm opacity-60 mb-3">${randomBook.author}</p>
+      <h3 class="font-medium text-lg mb-2">${random.title}</h3>
+      <p class="text-sm opacity-60 mb-3">${random.author}</p>
       <div class="flex flex-wrap gap-1">
-        ${randomBook.genres
+        ${random.genres
           .map(
             (genre) =>
               `<span class="badge badge-outline badge-sm">${genre}</span>`
@@ -249,7 +250,10 @@ function getRandomBook() {
           .join("")}
       </div>
     `;
-    resultDiv.classList.remove("hidden");
+    count++;
+    if (count >= totalSpins) {
+      clearInterval(interval);
+    }
   }, 100);
 }
 
