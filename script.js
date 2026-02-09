@@ -313,6 +313,7 @@ function displayChallenge() {
 
   const challengeBooks = challenge.books || [];
   const readCount = challengeBooks.filter((b) => b.is_read).length;
+  const unreadChallengeBooks = challengeBooks.filter((b) => !b.is_read);
   const pct =
     challenge.goal > 0
       ? Math.min(100, Math.round((readCount / challenge.goal) * 100))
@@ -376,10 +377,52 @@ function displayChallenge() {
           </div>
 
           ${bookListHtml}
+
+          ${unreadChallengeBooks.length > 0 ? `
+          <div class="divider"></div>
+          <div class="text-center">
+            <button onclick="spinRoulette()" class="btn btn-secondary">
+              Tirer au sort ma prochaine lecture
+            </button>
+            <div id="roulette-result" class="mt-4 hidden">
+              <div class="card card-border bg-base-200">
+                <div class="card-body p-4 text-center">
+                  <div class="text-xs uppercase tracking-wide text-secondary mb-2">Tu vas lire...</div>
+                  <div id="roulette-book-title" class="font-medium text-lg"></div>
+                  <div id="roulette-book-author" class="text-sm opacity-60"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          ` : ""}
         </div>
       </div>
     </div>
   `;
+}
+
+function spinRoulette() {
+  const unread = (challenge.books || []).filter((b) => !b.is_read);
+  if (unread.length === 0) return;
+
+  const resultDiv = document.getElementById("roulette-result");
+  const titleDiv = document.getElementById("roulette-book-title");
+  const authorDiv = document.getElementById("roulette-book-author");
+
+  resultDiv.classList.add("hidden");
+
+  let count = 0;
+  const totalSpins = 15;
+  const interval = setInterval(() => {
+    const random = unread[Math.floor(Math.random() * unread.length)];
+    titleDiv.textContent = random.title;
+    authorDiv.textContent = random.author;
+    resultDiv.classList.remove("hidden");
+    count++;
+    if (count >= totalSpins) {
+      clearInterval(interval);
+    }
+  }, 100);
 }
 
 async function toggleReadAndRefreshChallenge(bookId) {
@@ -416,6 +459,7 @@ function renderBookSelectorList(query) {
 
   const available = books.filter(
     (b) =>
+      !b.is_read &&
       !challengeBookIds.includes(b.id) &&
       (b.title.toLowerCase().includes(query) ||
         b.author.toLowerCase().includes(query))
@@ -453,6 +497,7 @@ window.deleteChallenge = deleteChallenge;
 window.addToChallenge = addToChallenge;
 window.removeFromChallenge = removeFromChallenge;
 window.toggleReadAndRefreshChallenge = toggleReadAndRefreshChallenge;
+window.spinRoulette = spinRoulette;
 window.openBookSelector = openBookSelector;
 window.closeBookSelector = closeBookSelector;
 window.filterBookSelector = filterBookSelector;
