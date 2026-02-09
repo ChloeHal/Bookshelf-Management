@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [tailwindcss()],
   server: {
     proxy: {
-      "/api": "http://localhost:8000",
+      "/api": {
+        target: "https://reading.chlohal.com",
+        changeOrigin: true,
+      },
     },
   },
 });
