@@ -429,9 +429,56 @@ function spinRoulette() {
   }, 100);
 }
 
+function launchConfetti(withGifts = false) {
+  const container = document.createElement("div");
+  container.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;";
+  document.body.appendChild(container);
+
+  const confettiChars = ["●", "■", "▲", "★", "♦", "◆", "✦"];
+  const colors = ["#6366f1", "#ec4899", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#ef4444"];
+  const giftChars = ["🎁", "🎀", "🎊"];
+  const count = withGifts ? 60 : 40;
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("div");
+    let char, size;
+
+    if (withGifts) {
+      char = giftChars[Math.floor(Math.random() * giftChars.length)];
+      size = 18 + Math.random() * 14;
+    } else {
+      char = confettiChars[Math.floor(Math.random() * confettiChars.length)];
+      size = 10 + Math.random() * 14;
+    }
+
+    el.textContent = char;
+    el.style.cssText = `
+      position:absolute;
+      left:${Math.random() * 100}%;
+      top:-20px;
+      font-size:${size}px;
+      color:${colors[Math.floor(Math.random() * colors.length)]};
+      opacity:${0.7 + Math.random() * 0.3};
+      animation:confetti-fall ${1.5 + Math.random() * 2}s ease-in forwards;
+      animation-delay:${Math.random() * 0.5}s;
+    `;
+    container.appendChild(el);
+  }
+
+  setTimeout(() => container.remove(), 4000);
+}
+
 async function toggleReadAndRefreshChallenge(bookId) {
+  const wasRead = (challenge.books || []).find((b) => b.id === bookId)?.is_read;
   await api('read.php', 'POST', { id: bookId });
   await Promise.all([loadBooks(), loadChallengeData()]);
+
+  if (!wasRead) {
+    const readCount = (challenge.books || []).filter((b) => b.is_read).length;
+    const withGifts = readCount % 3 === 0;
+    launchConfetti(withGifts);
+  }
+
   displayChallenge();
 }
 
