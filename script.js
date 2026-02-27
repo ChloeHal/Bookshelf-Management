@@ -90,10 +90,15 @@ function displayBooks() {
                 </button>
               </div>
             </div>
-            <p class="text-sm opacity-60">${book.author}</p>
+            <div class="flex justify-between items-center">
+              <p class="text-sm opacity-60">${book.author}</p>
+              ${!book.is_read && (book.is_gift || book.year) ? `
+              <div class="flex items-center gap-2 text-sm opacity-70">
+                ${book.is_gift ? '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13"/><path d="M3 13h18"/><path d="M12 8c-1.5-2-4-2.5-5-1s.5 3.5 5 5c4.5-1.5 6-3.5 5-5s-3.5-1-5 1z"/></svg>' : ""}
+                ${book.year ? `<span>${book.year}</span>` : ""}
+              </div>` : ""}
+            </div>
             <div class="flex flex-wrap gap-1 mt-1">
-              ${!book.is_read && book.is_gift ? '<span class="badge badge-sm badge-secondary">🎁 Cadeau</span>' : ""}
-              ${!book.is_read && book.year ? `<span class="badge badge-sm badge-accent">${book.year}</span>` : ""}
               ${book.genres
                 .map(
                   (genre) =>
