@@ -5,11 +5,13 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
-        $stmt = $pdo->query('SELECT id, title, author, genres, is_read FROM books ORDER BY title ASC');
+        $stmt = $pdo->query('SELECT id, title, author, genres, is_read, year, is_gift FROM books ORDER BY title ASC');
         $books = $stmt->fetchAll();
         foreach ($books as &$book) {
             $book['id'] = (int) $book['id'];
             $book['is_read'] = (bool) $book['is_read'];
+            $book['is_gift'] = (bool) $book['is_gift'];
+            $book['year'] = $book['year'] ? (int) $book['year'] : null;
             $book['genres'] = json_decode($book['genres']);
         }
         echo json_encode($books);
@@ -20,6 +22,8 @@ switch ($method) {
         $title = trim($data['title'] ?? '');
         $author = trim($data['author'] ?? '');
         $genres = $data['genres'] ?? [];
+        $year = !empty($data['year']) ? (int) $data['year'] : null;
+        $is_gift = !empty($data['is_gift']) ? 1 : 0;
 
         if (!$title || !$author || empty($genres)) {
             http_response_code(400);
@@ -27,8 +31,8 @@ switch ($method) {
             exit;
         }
 
-        $stmt = $pdo->prepare('INSERT INTO books (title, author, genres) VALUES (?, ?, ?)');
-        $stmt->execute([$title, $author, json_encode($genres)]);
+        $stmt = $pdo->prepare('INSERT INTO books (title, author, genres, year, is_gift) VALUES (?, ?, ?, ?, ?)');
+        $stmt->execute([$title, $author, json_encode($genres), $year, $is_gift]);
 
         echo json_encode(['id' => (int) $pdo->lastInsertId(), 'success' => true]);
         break;

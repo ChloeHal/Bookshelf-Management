@@ -19,7 +19,7 @@ switch ($method) {
         $challenge['year'] = (int) $challenge['year'];
 
         $stmt = $pdo->prepare(
-            'SELECT b.id, b.title, b.author, b.genres, b.is_read
+            'SELECT b.id, b.title, b.author, b.genres, b.is_read, b.year, b.is_gift
              FROM challenge_books cb
              JOIN books b ON b.id = cb.book_id
              WHERE cb.challenge_id = ?'
@@ -30,6 +30,8 @@ switch ($method) {
         foreach ($books as &$book) {
             $book['id'] = (int) $book['id'];
             $book['is_read'] = (bool) $book['is_read'];
+            $book['is_gift'] = (bool) $book['is_gift'];
+            $book['year'] = $book['year'] ? (int) $book['year'] : null;
             $book['genres'] = json_decode($book['genres']);
         }
 

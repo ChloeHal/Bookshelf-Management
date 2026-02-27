@@ -92,6 +92,8 @@ function displayBooks() {
             </div>
             <p class="text-sm opacity-60">${book.author}</p>
             <div class="flex flex-wrap gap-1 mt-1">
+              ${!book.is_read && book.is_gift ? '<span class="badge badge-sm badge-secondary">🎁 Cadeau</span>' : ""}
+              ${!book.is_read && book.year ? `<span class="badge badge-sm badge-accent">${book.year}</span>` : ""}
               ${book.genres
                 .map(
                   (genre) =>
@@ -118,9 +120,13 @@ async function addBook() {
   const titleEl = document.getElementById("book-title");
   const authorEl = document.getElementById("book-author");
   const genresEl = document.getElementById("book-genres");
+  const giftEl = document.getElementById("book-gift");
+  const yearEl = document.getElementById("book-year");
   const title = titleEl.value.trim();
   const author = authorEl.value.trim();
   const genresInput = genresEl.value.trim();
+  const is_gift = giftEl.checked;
+  const year = !is_gift && yearEl.value ? parseInt(yearEl.value) : null;
 
   titleEl.classList.remove("input-error");
   authorEl.classList.remove("input-error");
@@ -145,7 +151,7 @@ async function addBook() {
     .filter((g) => g)
     .slice(0, 3);
 
-  const result = await api('books.php', 'POST', { title, author, genres });
+  const result = await api('books.php', 'POST', { title, author, genres, year, is_gift });
 
   if (result.error) {
     alert(result.error);
@@ -155,6 +161,9 @@ async function addBook() {
   titleEl.value = "";
   authorEl.value = "";
   genresEl.value = "";
+  giftEl.checked = false;
+  yearEl.value = "";
+  yearEl.disabled = false;
 
   await loadBooks();
   displayBooks();
@@ -537,6 +546,18 @@ function renderBookSelectorList(query) {
     .join("");
 }
 
+// --- Toggle cadeau / année ---
+function toggleGiftInput() {
+  const giftEl = document.getElementById("book-gift");
+  const yearEl = document.getElementById("book-year");
+  if (giftEl.checked) {
+    yearEl.value = "";
+    yearEl.disabled = true;
+  } else {
+    yearEl.disabled = false;
+  }
+}
+
 // --- Exposer les fonctions au scope global (nécessaire pour onclick en mode module) ---
 window.showPage = showPage;
 window.addBook = addBook;
@@ -552,6 +573,7 @@ window.spinRoulette = spinRoulette;
 window.openBookSelector = openBookSelector;
 window.closeBookSelector = closeBookSelector;
 window.filterBookSelector = filterBookSelector;
+window.toggleGiftInput = toggleGiftInput;
 
 // --- Initialisation ---
 document.addEventListener("DOMContentLoaded", async () => {
