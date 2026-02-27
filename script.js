@@ -351,18 +351,13 @@ function displayChallenge() {
         (book) => `
         <div class="flex justify-between items-center p-3 bg-base-200 rounded-sm mb-2 border border-base-300 ${book.is_read ? "opacity-50" : ""}">
           <div class="flex-1">
-            <div class="font-medium text-sm">
-              ${book.title}
+            <div class="font-medium text-sm flex items-center gap-2">
+              <span>${book.title}</span>
+              ${!book.is_read && book.is_gift ? '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13"/><path d="M3 13h18"/><path d="M12 8c-1.5-2-4-2.5-5-1s.5 3.5 5 5c4.5-1.5 6-3.5 5-5s-3.5-1-5 1z"/></svg>' : ""}
+              ${!book.is_read && book.year ? `<span class="text-xs opacity-70 font-normal">${book.year}</span>` : ""}
               ${book.is_read ? '<span class="text-xs font-normal text-success"> — Lu</span>' : ""}
             </div>
-            <div class="flex justify-between items-center">
-              <div class="text-xs opacity-60">${book.author}</div>
-              ${!book.is_read && (book.is_gift || book.year) ? `
-              <div class="flex items-center gap-2 text-xs opacity-70">
-                ${book.is_gift ? '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13"/><path d="M3 13h18"/><path d="M12 8c-1.5-2-4-2.5-5-1s.5 3.5 5 5c4.5-1.5 6-3.5 5-5s-3.5-1-5 1z"/></svg>' : ""}
-                ${book.year ? `<span>${book.year}</span>` : ""}
-              </div>` : ""}
-            </div>
+            <div class="text-xs opacity-60">${book.author}</div>
           </div>
           <div class="flex items-center gap-1">
             <button onclick="toggleReadAndRefreshChallenge(${book.id})" class="btn btn-xs ${book.is_read ? "btn-success" : "btn-outline"}" title="${book.is_read ? "Marquer non lu" : "Marquer lu"}">
