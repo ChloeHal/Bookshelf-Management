@@ -28,8 +28,14 @@
           >
             Tous mes livres
           </button>
+          <button role="tab" class="tab" onclick="showPage('wishlist-page')">
+            Wishlist
+          </button>
           <button role="tab" class="tab" onclick="showPage('challenge-page')">
             Mon Challenge
+          </button>
+          <button role="tab" class="tab" onclick="showPage('stats-page')">
+            Statistiques
           </button>
           <button role="tab" class="tab" onclick="showPage('random-page')">
             Livre aléatoire
@@ -99,6 +105,26 @@
         ></div>
       </div>
 
+      <!-- Page Wishlist -->
+      <div id="wishlist-page" class="page">
+        <div class="card card-border bg-base-100 mb-6">
+          <div class="card-body">
+            <h2 class="card-title">Ajouter à ma wishlist</h2>
+            <div class="grid gap-4 md:grid-cols-3">
+              <input type="text" id="wish-title" class="input w-full" placeholder="Titre du livre" />
+              <input type="text" id="wish-author" class="input w-full" placeholder="Auteur" />
+              <input type="text" id="wish-genres" class="input w-full" placeholder="Genres (max 3, virgules)" />
+            </div>
+            <div class="card-actions mt-4">
+              <button onclick="addWishlistBook()" class="btn btn-primary">
+                Ajouter à la wishlist
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="wishlist-container" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+
       <!-- Page Livre Aléatoire -->
       <div id="random-page" class="page">
         <div class="max-w-md mx-auto">
@@ -125,6 +151,11 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Page Statistiques -->
+      <div id="stats-page" class="page">
+        <div id="stats-content"></div>
       </div>
 
       <!-- Page Challenge -->
