@@ -293,7 +293,7 @@ function displayStats() {
   if (byRating.length > 0) {
     bestRatedHtml = statCard("Genres les mieux notés", `
       <div class="flex flex-col gap-2">
-        ${byRating.map(([genre, avg, count], i) => `
+        ${byRating.slice(0, 5).map(([genre, avg, count], i) => `
           <div class="flex items-center justify-between p-2 ${i === 0 ? "bg-warning/10 border border-warning/20" : "bg-base-200"} rounded-sm">
             <div class="flex items-center gap-2">
               ${i === 0 ? '<span class="text-sm">👑</span>' : ""}
