@@ -5,7 +5,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
-        $stmt = $pdo->query('SELECT id, title, author, genres, is_read, year, is_gift, is_wishlist, rating FROM books ORDER BY title ASC');
+        $stmt = $pdo->query('SELECT id, title, author, genres, is_read, year, is_gift, is_wishlist, rating, page_count, color, size FROM books ORDER BY title ASC');
         $books = $stmt->fetchAll();
         foreach ($books as &$book) {
             $book['id'] = (int) $book['id'];
@@ -14,6 +14,8 @@ switch ($method) {
             $book['is_wishlist'] = (bool) $book['is_wishlist'];
             $book['rating'] = $book['rating'] ? (int) $book['rating'] : null;
             $book['year'] = $book['year'] ? (int) $book['year'] : null;
+            $book['page_count'] = $book['page_count'] ? (int) $book['page_count'] : null;
+            $book['size'] = $book['size'] ? (int) $book['size'] : null;
             $book['genres'] = json_decode($book['genres']);
         }
         echo json_encode($books);
@@ -38,6 +40,46 @@ switch ($method) {
         $stmt->execute([$title, $author, json_encode($genres), $year, $is_gift, $is_wishlist]);
 
         echo json_encode(['id' => (int) $pdo->lastInsertId(), 'success' => true]);
+        break;
+
+    case 'PUT':
+        $data = json_decode(file_get_contents('php://input'), true);
+        $id = (int) ($data['id'] ?? 0);
+
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ID requis']);
+            exit;
+        }
+
+        $allowed = ['title', 'author', 'genres', 'page_count', 'color', 'size', 'rating', 'is_read', 'is_gift', 'year'];
+        $fields = [];
+        $values = [];
+
+        foreach ($allowed as $field) {
+            if (array_key_exists($field, $data)) {
+                if ($field === 'genres') {
+                    $fields[] = "$field = ?";
+                    $values[] = json_encode($data[$field]);
+                } else {
+                    $fields[] = "$field = ?";
+                    $values[] = $data[$field];
+                }
+            }
+        }
+
+        if (empty($fields)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Aucun champ à mettre à jour']);
+            exit;
+        }
+
+        $values[] = $id;
+        $sql = "UPDATE books SET " . implode(', ', $fields) . " WHERE id = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($values);
+
+        echo json_encode(['success' => true]);
         break;
 
     case 'DELETE':

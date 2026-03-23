@@ -1,6 +1,32 @@
 // --- État global ---
 let books = [];
 let challenge = null;
+let editMode = false;
+let editRating = 0;
+
+// --- Constantes pour la bibliothèque visuelle ---
+const BOOK_COLORS = [
+  '#2c2c2c', // noir
+  '#f5f0e0', // crème
+  '#b03a3a', // rouge
+  '#2b4570', // bleu marine
+  '#5a8a5c', // vert
+  '#d4a84b', // jaune moutarde
+  '#f0d8c4', // pêche clair
+  '#7b3f6a', // violet
+  '#3a7d8c', // bleu canard
+  '#c25b28', // orange brûlé
+  '#8c7a5a', // taupe
+  '#4a7a4a', // vert forêt
+  '#d48a8a', // rose poudré
+  '#5c5c8a', // lavande foncé
+  '#c4b078', // doré pâle
+  '#a0522d', // terre de sienne
+  '#6a8fa0', // bleu gris
+  '#e8dcc8', // sable
+  '#7a3b3b', // bordeaux
+  '#3a5a3a', // vert sombre
+];
 
 // --- API helper ---
 async function api(endpoint, method = 'GET', body = null) {
@@ -47,6 +73,404 @@ function starsHtml(bookId, rating, interactive = true) {
   return html;
 }
 
+// --- Helpers bibliothèque visuelle ---
+function seededRandom(seed) {
+  let x = Math.sin(seed * 9301 + 49297) * 49297;
+  return x - Math.floor(x);
+}
+
+// 3 fixed heights: 1=petit (160px), 2=moyen (180px), 3=grand (200px)
+const SIZE_HEIGHTS = { 1: 160, 2: 180, 3: 200 };
+
+function getBookDisplayProps(book) {
+  const s1 = seededRandom(book.id);
+  const s2 = seededRandom(book.id + 1000);
+  const s3 = seededRandom(book.id + 2000);
+
+  const pageCount = book.page_count || Math.floor(100 + s1 * 600);
+  const size = book.size || ([1, 2, 3][Math.floor(s2 * 3)]);
+  const color = book.color || BOOK_COLORS[Math.floor(s3 * BOOK_COLORS.length)];
+
+  // Width: 18px (80 pages) to 55px (800+ pages)
+  const width = Math.max(18, Math.min(55, 18 + ((pageCount - 80) / 720) * 37));
+
+  // Height: strictly one of 3 fixed values
+  const height = SIZE_HEIGHTS[size] || 170;
+
+  return { pageCount, size, color, width, height };
+}
+
+function getContrastColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.45 ? '#1a1a1a' : '#f0f0f0';
+}
+
+function getLastName(author) {
+  const parts = author.trim().split(/\s+/);
+  return parts[parts.length - 1];
+}
+
+function buildReadPiles(readBooks, maxPileHeight) {
+  // Group read books by exact height (3 fixed sizes: 130, 170, 210)
+  const heightGroups = {};
+  readBooks.forEach(b => {
+    const props = getBookDisplayProps(b);
+    if (!heightGroups[props.height]) heightGroups[props.height] = [];
+    heightGroups[props.height].push({ book: b, props });
+  });
+
+  // Split groups into piles that don't exceed maxPileHeight
+  const piles = [];
+  Object.entries(heightGroups).forEach(([h, books]) => {
+    const bookHeight = parseInt(h);
+    let currentPile = [];
+    let currentPileThickness = 0;
+
+    books.forEach(item => {
+      // Each book adds its width (thickness) to the pile height
+      if (currentPileThickness + item.props.width > maxPileHeight && currentPile.length > 0) {
+        piles.push({ type: 'pile', books: currentPile, bookHeight });
+        currentPile = [];
+        currentPileThickness = 0;
+      }
+      currentPile.push(item);
+      currentPileThickness += item.props.width;
+    });
+
+    if (currentPile.length > 0) {
+      piles.push({ type: 'pile', books: currentPile, bookHeight });
+    }
+  });
+
+  return piles;
+}
+
+function getShelfItems() {
+  const lib = libraryBooks();
+  const readBooks = lib.filter(b => b.is_read);
+  const unreadBooks = lib.filter(b => !b.is_read);
+
+  // Find max standing book height (for pile height limit)
+  let maxHeight = 0;
+  lib.forEach(b => {
+    const h = getBookDisplayProps(b).height;
+    if (h > maxHeight) maxHeight = h;
+  });
+
+  // Build unread items grouped by genre (with label on first book of each group)
+  const genreGroups = {};
+  unreadBooks.forEach(b => {
+    const firstGenre = (b.genres && b.genres[0]) || 'Sans genre';
+    if (!genreGroups[firstGenre]) genreGroups[firstGenre] = [];
+    genreGroups[firstGenre].push(b);
+  });
+
+  // Alternate big/small genre groups so labels don't overlap
+  const genresBySize = Object.keys(genreGroups).sort((a, b) => genreGroups[b].length - genreGroups[a].length);
+  const ordered = [];
+  let left = 0, right = genresBySize.length - 1;
+  while (left <= right) {
+    if (left === right) { ordered.push(genresBySize[left]); break; }
+    ordered.push(genresBySize[left++]);
+    ordered.push(genresBySize[right--]);
+  }
+
+  // Build genre groups as blocks (each block = array of book items)
+  const genreBlocks = ordered.map(genre => {
+    return genreGroups[genre].map((b, i) => ({
+      type: 'book', book: b, genreLabel: i === 0 ? genre : null
+    }));
+  });
+
+  // Build read piles
+  const piles = buildReadPiles(readBooks, maxHeight);
+
+  // Insert piles only BETWEEN genre blocks (not inside)
+  // Available slots: before first block, between blocks, after last block
+  const slots = genreBlocks.length + 1; // 0..genreBlocks.length
+  const pilesPerSlot = {};
+
+  piles.forEach((pile, i) => {
+    const slot = Math.floor(seededRandom(i + 7777) * slots);
+    if (!pilesPerSlot[slot]) pilesPerSlot[slot] = [];
+    pilesPerSlot[slot].push(pile);
+  });
+
+  // Assemble: slot 0 piles, block 0, slot 1 piles, block 1, ...
+  const allItems = [];
+  for (let i = 0; i <= genreBlocks.length; i++) {
+    if (pilesPerSlot[i]) {
+      pilesPerSlot[i].forEach(p => allItems.push(p));
+    }
+    if (i < genreBlocks.length) {
+      genreBlocks[i].forEach(item => allItems.push(item));
+    }
+  }
+
+  return { items: allItems, totalBooks: lib.length, readCount: readBooks.length };
+}
+
+function displayShelf() {
+  const container = document.getElementById('bookshelf-container');
+  const { items, totalBooks, readCount } = getShelfItems();
+
+  if (totalBooks === 0) {
+    container.innerHTML = `
+      <div class="text-center py-16 opacity-50">
+        <div class="text-5xl mb-4">📚</div>
+        <p class="text-sm">Votre bibliothèque est vide</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Measure container width
+  const containerWidth = container.clientWidth || 1100;
+  const padding = 24;
+  const usableWidth = containerWidth - padding;
+  const gap = 2;
+
+  // Pre-compute slot widths
+  const enrichedItems = items.map(item => {
+    if (item.type === 'pile') {
+      return { ...item, slotWidth: item.bookHeight + gap };
+    }
+    // Standing book
+    const props = getBookDisplayProps(item.book);
+    return { ...item, props, slotWidth: props.width + gap };
+  });
+
+  // Distribute onto shelves
+  const shelves = [[]];
+  let currentWidth = 0;
+
+  enrichedItems.forEach(item => {
+    if (currentWidth + item.slotWidth > usableWidth && shelves[shelves.length - 1].length > 0) {
+      shelves.push([]);
+      currentWidth = 0;
+    }
+    shelves[shelves.length - 1].push(item);
+    currentWidth += item.slotWidth;
+  });
+
+  // Render
+  const editClass = editMode ? 'edit-mode' : '';
+  let html = `<div class="bookshelf ${editClass}">`;
+
+  shelves.forEach(shelf => {
+    html += '<div class="shelf">';
+    html += '<div class="shelf-books">';
+
+    // Track cumulative width to position labels on the shelf board
+    let cumulativeWidth = 12; // shelf padding-left
+    const labels = [];
+    let itemIndex = 0;
+
+    shelf.forEach(item => {
+      // Record label position if this item starts a genre group
+      if (item.genreLabel) {
+        labels.push({ label: item.genreLabel, left: cumulativeWidth });
+      }
+      // item actual width (without gap) + gap between items
+      const itemWidth = item.slotWidth - gap;
+      cumulativeWidth += itemWidth + (itemIndex < shelf.length - 1 ? gap : 0);
+      itemIndex++;
+
+      if (item.type === 'pile') {
+        const pileHeight = item.books.reduce((sum, b) => sum + b.props.width, 0);
+        html += `<div class="book-pile" style="width: ${item.bookHeight}px; height: ${pileHeight}px;">`;
+
+        item.books.forEach(({ book, props }) => {
+          const textColor = getContrastColor(props.color);
+          const textColorDim = textColor === '#f0f0f0' ? 'rgba(240,240,240,0.55)' : 'rgba(26,26,26,0.45)';
+          // Thin books get smaller font, thick books get bigger
+          const fontSize = props.width < 22 ? 5 : props.width < 30 ? 7 : Math.min(10, props.width * 0.3);
+          const clickHandler = editMode ? `onclick="openEditModal(${book.id})"` : '';
+
+          // Stars vertical on the left
+          let starsHtml = '';
+          if (book.rating) {
+            starsHtml = '<div class="pile-book-stars">';
+            for (let s = 1; s <= 5; s++) {
+              starsHtml += `<span class="star ${s <= book.rating ? 'filled' : ''}"></span>`;
+            }
+            starsHtml += '</div>';
+          }
+
+          html += `
+            <div class="pile-book"
+                 style="height: ${props.width}px; background-color: ${props.color}; color: ${textColor}; font-size: ${fontSize}px;"
+                 ${clickHandler}
+                 title="${book.title} — ${book.author}">
+              ${starsHtml}
+              <span class="pile-book-title">${book.title}</span>
+              <span class="pile-book-author" style="color: ${textColorDim};">${getLastName(book.author)}</span>
+            </div>
+          `;
+        });
+
+        html += '</div>';
+        return;
+      }
+
+      // Standing book (unread)
+      const { book, props } = item;
+      const textColor = getContrastColor(props.color);
+      const textColorDim = textColor === '#f0f0f0' ? 'rgba(240,240,240,0.7)' : 'rgba(26,26,26,0.6)';
+      const fontSize = props.width < 22 ? 6 : props.width < 30 ? 8 : Math.min(11, props.width * 0.22);
+      const authorFontSize = props.width < 22 ? 4 : Math.max(5, Math.min(7, props.width * 0.15));
+      const clickHandler = editMode ? `onclick="openEditModal(${book.id})"` : '';
+
+      // Horizontal stars at top
+      let ratingHtml = '';
+      if (book.rating) {
+        ratingHtml = '<div class="book-rating-stars">';
+        for (let i = 1; i <= 5; i++) {
+          ratingHtml += `<span class="star ${i <= book.rating ? 'filled' : ''}"></span>`;
+        }
+        ratingHtml += '</div>';
+      }
+
+      html += `
+        <div class="book-spine"
+             style="width: ${props.width}px; height: ${props.height}px; background-color: ${props.color}; color: ${textColor};"
+             ${clickHandler}
+             title="${book.title} — ${book.author}">
+          ${ratingHtml}
+          <div class="book-title-vertical" style="font-size: ${fontSize}px;">
+            ${book.title}
+          </div>
+          <div class="book-author-vertical" style="font-size: ${authorFontSize}px; color: ${textColorDim};">
+            ${getLastName(book.author)}
+          </div>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+    html += '<div class="shelf-board">';
+    labels.forEach(({ label, left }) => {
+      html += `<span class="shelf-label" style="left: ${left}px;">${label}</span>`;
+    });
+    html += '</div>';
+    html += '<div class="shelf-support"></div>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+
+  // Update legend
+  const unreadCount = totalBooks - readCount;
+  document.getElementById('shelf-legend').textContent =
+    `${totalBooks} livres — ${readCount} lus, ${unreadCount} non lus`;
+}
+
+// --- Mode édition ---
+function toggleEditMode() {
+  editMode = !editMode;
+  const btn = document.getElementById('edit-mode-btn');
+  if (editMode) {
+    btn.classList.remove('opacity-40');
+    btn.classList.add('btn-primary', 'opacity-100');
+    btn.querySelector('span').textContent = 'Done';
+  } else {
+    btn.classList.add('opacity-40');
+    btn.classList.remove('btn-primary', 'opacity-100');
+    btn.querySelector('span').textContent = 'Edit';
+  }
+  displayShelf();
+}
+
+function openEditModal(bookId) {
+  if (!editMode) return;
+  const book = books.find(b => b.id === bookId);
+  if (!book) return;
+
+  const props = getBookDisplayProps(book);
+
+  document.getElementById('edit-book-id').value = bookId;
+  document.getElementById('edit-book-title').value = book.title;
+  document.getElementById('edit-book-author').value = book.author;
+  document.getElementById('edit-book-genres').value = (book.genres || []).join(', ');
+  document.getElementById('edit-book-pages').value = book.page_count || props.pageCount;
+  document.getElementById('edit-book-year').value = book.year || '';
+  document.getElementById('edit-book-size').value = book.size || props.size;
+  document.getElementById('edit-book-gift').checked = book.is_gift || false;
+  const currentColor = book.color || props.color;
+  document.getElementById('edit-book-color').value = currentColor;
+  renderColorSwatches(currentColor);
+
+  editRating = book.rating || 0;
+  renderEditRatingStars();
+
+  document.getElementById('edit-book-modal').showModal();
+}
+
+function renderColorSwatches(selectedColor) {
+  const container = document.getElementById('edit-color-swatches');
+  container.innerHTML = BOOK_COLORS.map(c => {
+    const isSelected = c.toLowerCase() === selectedColor.toLowerCase();
+    return `<button type="button" onclick="selectColorSwatch('${c}')"
+      style="background: ${c}; width: 24px; height: 24px; border: 2px solid ${isSelected ? '#fff' : 'transparent'}; outline: ${isSelected ? '2px solid #6b5c4a' : 'none'}; cursor: pointer;"
+      title="${c}"></button>`;
+  }).join('');
+}
+
+function selectColorSwatch(color) {
+  document.getElementById('edit-book-color').value = color;
+  renderColorSwatches(color);
+}
+
+function renderEditRatingStars() {
+  const container = document.getElementById('edit-book-rating');
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    const filled = i <= editRating;
+    html += `<button type="button" onclick="setEditRating(${i})" class="cursor-pointer hover:scale-110 transition-transform">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 ${filled ? 'text-warning' : 'text-base-300'}" viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </button>`;
+  }
+  container.innerHTML = html;
+}
+
+function setEditRating(rating) {
+  editRating = editRating === rating ? 0 : rating;
+  renderEditRatingStars();
+}
+
+function closeEditModal() {
+  document.getElementById('edit-book-modal').close();
+}
+
+async function saveBookEdit() {
+  const id = parseInt(document.getElementById('edit-book-id').value);
+  const title = document.getElementById('edit-book-title').value.trim();
+  const author = document.getElementById('edit-book-author').value.trim();
+  const genresInput = document.getElementById('edit-book-genres').value.trim();
+  const page_count = parseInt(document.getElementById('edit-book-pages').value) || null;
+  const year = parseInt(document.getElementById('edit-book-year').value) || null;
+  const size = parseInt(document.getElementById('edit-book-size').value) || 2;
+  const is_gift = document.getElementById('edit-book-gift').checked ? 1 : 0;
+  const color = document.getElementById('edit-book-color').value;
+  const rating = editRating;
+
+  if (!title || !author) return;
+
+  const genres = genresInput.split(',').map(g => g.trim()).filter(g => g).slice(0, 3);
+
+  await api('books.php', 'PUT', {
+    id, title, author, genres, page_count, size, is_gift, year, color, rating
+  });
+
+  closeEditModal();
+  await loadBooks();
+  displayShelf();
+}
+
 // --- Navigation ---
 function showPage(pageId) {
   document.querySelectorAll(".page").forEach((page) => {
@@ -58,6 +482,9 @@ function showPage(pageId) {
   document.getElementById(pageId).classList.add("active");
   event.target.classList.add("tab-active");
 
+  if (pageId === "home-page") {
+    displayShelf();
+  }
   if (pageId === "random-page") {
     updateGenreSelect();
     document.getElementById("random-result").classList.add("hidden");
@@ -1029,9 +1456,21 @@ window.markAsBought = markAsBought;
 window.rateBook = rateBook;
 window.displayWishlist = displayWishlist;
 window.displayStats = displayStats;
+window.displayShelf = displayShelf;
+window.toggleEditMode = toggleEditMode;
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+window.saveBookEdit = saveBookEdit;
+window.setEditRating = setEditRating;
+window.selectColorSwatch = selectColorSwatch;
 
 // --- Initialisation ---
 document.addEventListener("DOMContentLoaded", async () => {
   await Promise.all([loadBooks(), loadChallengeData()]);
-  displayBooks();
+  displayShelf();
+
+  // Sync color picker → swatches
+  document.getElementById('edit-book-color').addEventListener('input', (e) => {
+    renderColorSwatches(e.target.value);
+  });
 });
