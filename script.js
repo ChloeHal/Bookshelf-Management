@@ -570,6 +570,24 @@ function displayBooks() {
 }
 
 // --- Statistiques ---
+// SVG helper: radial gauge (arc from 0 to pct%)
+function svgGauge(pct, label, sublabel, size = 100, color = '#4ade80') {
+  const r = (size - 10) / 2;
+  const c = size / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - pct / 100);
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="block">
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="currentColor" stroke-width="6" class="text-base-300" />
+      <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="6"
+        stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
+        stroke-linecap="round" transform="rotate(-90 ${c} ${c})" style="transition: stroke-dashoffset 0.6s ease;" />
+      <text x="${c}" y="${c - 4}" text-anchor="middle" class="fill-current" style="font-size:${size * 0.22}px; font-weight:700;">${label}</text>
+      <text x="${c}" y="${c + 12}" text-anchor="middle" class="fill-current opacity-50" style="font-size:${size * 0.1}px;">${sublabel}</text>
+    </svg>
+  `;
+}
+
 function displayStats() {
   const container = document.getElementById("stats-content");
   const lib = libraryBooks();
@@ -584,15 +602,53 @@ function displayStats() {
     return;
   }
 
-  const readCount = lib.filter((b) => b.is_read).length;
+  const readBooks = lib.filter((b) => b.is_read);
+  const readCount = readBooks.length;
   const unreadCount = lib.length - readCount;
+  const readPct = lib.length > 0 ? Math.round((readCount / lib.length) * 100) : 0;
   const ratedBooks = lib.filter((b) => b.rating);
   const avgRating = ratedBooks.length > 0
     ? (ratedBooks.reduce((s, b) => s + b.rating, 0) / ratedBooks.length).toFixed(1)
     : null;
   const giftCount = lib.filter((b) => b.is_gift).length;
 
-  // Genre data
+  // Page counts (only books with actual page_count encoded)
+  const libWithPages = lib.filter(b => b.page_count);
+  const readWithPages = readBooks.filter(b => b.page_count);
+  const totalPages = libWithPages.reduce((sum, b) => sum + b.page_count, 0);
+  const readPages = readWithPages.reduce((sum, b) => sum + b.page_count, 0);
+  const readPagesPct = totalPages > 0 ? Math.round((readPages / totalPages) * 100) : 0;
+  const unreadPages = totalPages - readPages;
+  const encodedPagesPct = lib.length > 0 ? Math.round((libWithPages.length / lib.length) * 100) : 0;
+
+  // Time stats: 1 page = 70 seconds (1min10)
+  const SEC_PER_PAGE = 70;
+  const totalMinutes = Math.round((totalPages * SEC_PER_PAGE) / 60);
+  const readMinutes = Math.round((readPages * SEC_PER_PAGE) / 60);
+  const unreadMinutes = totalMinutes - readMinutes;
+  function formatTime(mins) {
+    if (mins < 60) return `${mins}min`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (h < 24) return m > 0 ? `${h}h${String(m).padStart(2,'0')}` : `${h}h`;
+    const d = Math.floor(h / 24);
+    const rh = h % 24;
+    return rh > 0 ? `${d}j ${rh}h` : `${d} jours`;
+  }
+
+  // Authors
+  const uniqueAuthors = new Set(lib.map(b => b.author)).size;
+  const authorCounts = {};
+  lib.forEach(b => { authorCounts[b.author] = (authorCounts[b.author] || 0) + 1; });
+  const authorReadCounts = {};
+  readBooks.forEach(b => { authorReadCounts[b.author] = (authorReadCounts[b.author] || 0) + 1; });
+  const topAuthorsOwned = Object.entries(authorCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topAuthorsRead = Object.entries(authorReadCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  // Genres
+  const allGenres = new Set();
+  lib.forEach(b => b.genres.forEach(g => allGenres.add(g)));
+
   const genreData = {};
   lib.forEach((book) => {
     book.genres.forEach((g) => {
@@ -600,264 +656,490 @@ function displayStats() {
       genreData[g].total++;
       if (book.is_read) genreData[g].read++;
       else genreData[g].unread++;
-      if (book.rating) {
-        genreData[g].ratingSum += book.rating;
-        genreData[g].ratingCount++;
-      }
+      if (book.rating) { genreData[g].ratingSum += book.rating; genreData[g].ratingCount++; }
       genreData[g].books.push(book);
     });
   });
 
-  const starSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-warning inline-block" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+  // Primary genre (first genre only)
+  const primaryGenreData = {};
+  lib.forEach((book) => {
+    const pg = (book.genres && book.genres[0]) || 'Sans genre';
+    if (!primaryGenreData[pg]) primaryGenreData[pg] = { total: 0, read: 0 };
+    primaryGenreData[pg].total++;
+    if (book.is_read) primaryGenreData[pg].read++;
+  });
 
-  // 1. Genres les plus présents
-  const byTotal = Object.entries(genreData).sort((a, b) => b[1].total - a[1].total);
-
-  // 2. Genres les mieux notés (only rated)
+  // Rankings
   const byRating = Object.entries(genreData)
     .filter(([, s]) => s.ratingCount > 0)
     .map(([g, s]) => [g, s.ratingSum / s.ratingCount, s.ratingCount])
     .sort((a, b) => b[1] - a[1]);
-
-  // 3. Genres les moins bien notés
   const byWorstRating = [...byRating].sort((a, b) => a[1] - b[1]);
-
-  // 4. Genres avec le plus de livres non lus
   const byUnread = Object.entries(genreData)
     .filter(([, s]) => s.unread > 0)
     .sort((a, b) => b[1].unread - a[1].unread);
-
-  // 5. Genres les moins explorés (lowest read %)
   const byLeastRead = Object.entries(genreData)
     .filter(([, s]) => s.total >= 2)
     .map(([g, s]) => [g, s, Math.round((s.read / s.total) * 100)])
     .sort((a, b) => a[2] - b[2]);
-
-  // 6. Genres 100% lus
   const fullyRead = Object.entries(genreData).filter(([, s]) => s.read === s.total && s.total > 0);
 
-  // Helper: suggestion card for unread books
-  function suggestionCards(booksArr, max = 3) {
-    const unread = booksArr.filter((b) => !b.is_read).slice(0, max);
-    if (unread.length === 0) return "";
-    return `
-      <div class="mt-3 flex flex-col gap-1.5">
-        <div class="text-xs opacity-50 uppercase tracking-wide">Suggestions de lecture</div>
-        ${unread.map((b) => `
-          <div class="flex items-center justify-between p-2 bg-base-300/50 rounded-sm text-xs">
-            <div class="min-w-0">
-              <span class="font-medium">${b.title}</span>
-              <span class="opacity-50 ml-1">— ${b.author}</span>
-            </div>
+  // Fun numbers
+  const avgPagesPerBook = libWithPages.length > 0 ? Math.round(totalPages / libWithPages.length) : 0;
+  const longestBook = libWithPages.reduce((best, b) => {
+    return b.page_count > (best.pages || 0) ? { book: b, pages: b.page_count } : best;
+  }, {});
+  const shortestBook = libWithPages.reduce((best, b) => {
+    return (best.pages === undefined || b.page_count < best.pages) ? { book: b, pages: b.page_count } : best;
+  }, {});
+
+  // Rating distribution
+  const ratingDist = [0, 0, 0, 0, 0];
+  ratedBooks.forEach(b => { ratingDist[b.rating - 1]++; });
+  const maxRatingCount = Math.max(...ratingDist, 1);
+
+  // Storage bar colors
+  const storageColors = [
+    '#b03a3a', '#2b4570', '#5a8a5c', '#d4a84b', '#7b3f6a',
+    '#3a7d8c', '#c25b28', '#8c7a5a', '#5c5c8a', '#a0522d',
+    '#6a8fa0', '#4a7a4a', '#d48a8a', '#c4b078', '#3a5a3a'
+  ];
+  const primarySorted = Object.entries(primaryGenreData).sort((a, b) => b[1].total - a[1].total);
+  const storageSegments = primarySorted.map(([genre, s], i) => ({
+    genre, pct: (s.total / lib.length) * 100,
+    color: storageColors[i % storageColors.length], count: s.total
+  }));
+
+  // Waffle chart: 10x10 grid, each cell = 1% of collection
+  const waffleSize = 100;
+  const readCells = Math.round((readCount / lib.length) * waffleSize);
+  let waffleHtml = '';
+  for (let i = 0; i < waffleSize; i++) {
+    const isRead = i < readCells;
+    waffleHtml += `<div class="w-2 h-2 ${isRead ? 'bg-success' : 'bg-base-300'}" style="transition: background 0.3s ${i * 8}ms;"></div>`;
+  }
+
+  // ========== BUILD HTML ==========
+
+  // --- Row 1: Hero gauges ---
+  const heroHtml = `
+    <div class="card card-border bg-base-100">
+      <div class="card-body p-6">
+        <div class="flex items-center justify-around flex-wrap gap-6">
+          <div class="flex flex-col items-center gap-2">
+            ${svgGauge(readPct, `${readPct}%`, `${readCount}/${lib.length} livres`, 120, '#4ade80')}
+            <span class="text-xs font-medium opacity-60 uppercase tracking-wide">Livres lus</span>
           </div>
-        `).join("")}
-      </div>
-    `;
-  }
-
-  // Build sections
-  function statCard(title, content) {
-    return `
-      <div class="card card-border bg-base-100">
-        <div class="card-body p-5">
-          <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">${title}</h3>
-          ${content}
-        </div>
-      </div>
-    `;
-  }
-
-  // Overview numbers
-  const overviewHtml = `
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-      <div class="card card-border bg-base-100">
-        <div class="card-body p-4 text-center">
-          <div class="text-2xl font-bold">${lib.length}</div>
-          <div class="text-xs opacity-60">Livres</div>
-        </div>
-      </div>
-      <div class="card card-border bg-base-100">
-        <div class="card-body p-4 text-center">
-          <div class="text-2xl font-bold text-success">${readCount}</div>
-          <div class="text-xs opacity-60">Lus</div>
-        </div>
-      </div>
-      <div class="card card-border bg-base-100">
-        <div class="card-body p-4 text-center">
-          <div class="text-2xl font-bold">${unreadCount}</div>
-          <div class="text-xs opacity-60">Non lus</div>
-        </div>
-      </div>
-      <div class="card card-border bg-base-100">
-        <div class="card-body p-4 text-center">
-          <div class="text-2xl font-bold text-warning">${avgRating || "—"}</div>
-          <div class="text-xs opacity-60">Note moy.${ratedBooks.length > 0 ? ` (${ratedBooks.length})` : ""}</div>
+          <div class="flex flex-col items-center gap-2">
+            ${svgGauge(readPagesPct, `${readPagesPct}%`, `${readPages.toLocaleString('fr-FR')} p.`, 120, '#60a5fa')}
+            <span class="text-xs font-medium opacity-60 uppercase tracking-wide">Pages lues</span>
+            ${libWithPages.length < lib.length ? `<span class="text-[9px] opacity-35">${libWithPages.length}/${lib.length} livres renseignés</span>` : ''}
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            ${svgGauge(avgRating ? (avgRating / 5 * 100) : 0, avgRating || '—', `${ratedBooks.length} avis`, 120, '#fbbf24')}
+            <span class="text-xs font-medium opacity-60 uppercase tracking-wide">Note moyenne</span>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            ${svgGauge(totalMinutes > 0 ? Math.round((readMinutes / totalMinutes) * 100) : 0, formatTime(readMinutes), `/ ${formatTime(totalMinutes)}`, 120, '#a78bfa')}
+            <span class="text-xs font-medium opacity-60 uppercase tracking-wide">Temps lu</span>
+          </div>
         </div>
       </div>
     </div>
   `;
 
-  // Most present genres
-  const mostPresentHtml = statCard("Genres les plus présents", `
-    <div class="flex flex-col gap-2">
-      ${byTotal.slice(0, 30).map(([genre, s]) => {
-        const pct = Math.round((s.total / lib.length) * 100);
-        return `
-          <div>
-            <div class="flex justify-between text-sm mb-1">
-              <span class="font-medium">${genre}</span>
-              <span class="opacity-60">${s.total} livre${s.total > 1 ? "s" : ""} · ${pct}%</span>
-            </div>
-            <progress class="progress progress-primary w-full h-2" value="${s.total}" max="${lib.length}"></progress>
+  // --- Row 2: Key numbers (horizontal ticker) ---
+  const tickerHtml = `
+    <div class="flex gap-3 overflow-x-auto pb-2 mb-2 scrollbar-none">
+      ${[
+        { val: lib.length, label: 'Livres' },
+        { val: uniqueAuthors, label: 'Auteurs' },
+        { val: allGenres.size, label: 'Genres' },
+        ...(libWithPages.length > 0 ? [
+          { val: totalPages.toLocaleString('fr-FR'), label: 'Pages' },
+          { val: avgPagesPerBook, label: 'Pages / livre' },
+          { val: formatTime(readMinutes), label: 'Temps lu' },
+          { val: formatTime(unreadMinutes), label: 'Reste à lire' },
+        ] : []),
+        { val: giftCount, label: 'Cadeaux' },
+      ].map(t => `
+        <div class="card card-border bg-base-100 flex-shrink-0">
+          <div class="card-body p-3 px-5 text-center">
+            <div class="text-lg font-bold">${t.val}</div>
+            <div class="text-[10px] opacity-50 uppercase tracking-wider">${t.label}</div>
           </div>
-        `;
-      }).join("")}
-    </div>
-  `);
-
-  // Best rated genres
-  let bestRatedHtml = "";
-  if (byRating.length > 0) {
-    bestRatedHtml = statCard("Genres les mieux notés", `
-      <div class="flex flex-col gap-2">
-        ${byRating.slice(0, 5).map(([genre, avg, count], i) => `
-          <div class="flex items-center justify-between p-2 ${i === 0 ? "bg-warning/10 border border-warning/20" : "bg-base-200"} rounded-sm">
-            <div class="flex items-center gap-2">
-              ${i === 0 ? '<span class="text-sm">👑</span>' : ""}
-              <span class="text-sm font-medium">${genre}</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              ${starSvg}
-              <span class="text-sm font-medium">${avg.toFixed(1)}</span>
-              <span class="text-xs opacity-40">(${count} avis)</span>
-            </div>
-          </div>
-        `).join("")}
-      </div>
-    `);
-  }
-
-  // Worst rated genres
-  let worstRatedHtml = "";
-  if (byWorstRating.length > 1) {
-    const worst = byWorstRating.filter(([, avg]) => avg < 4);
-    if (worst.length > 0) {
-      worstRatedHtml = statCard("Genres les moins aimés", `
-        <div class="flex flex-col gap-2">
-          ${worst.map(([genre, avg, count]) => {
-            const unreadInGenre = genreData[genre].books.filter((b) => !b.is_read);
-            return `
-              <div class="p-2 bg-base-200 rounded-sm">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-medium">${genre}</span>
-                  <div class="flex items-center gap-1.5">
-                    ${starSvg}
-                    <span class="text-sm">${avg.toFixed(1)}</span>
-                    <span class="text-xs opacity-40">(${count} avis)</span>
-                  </div>
-                </div>
-                ${unreadInGenre.length > 0 ? `
-                  <div class="text-xs opacity-50 mt-2">Peut-être qu'un de ces livres changera ton avis ?</div>
-                  ${suggestionCards(genreData[genre].books, 2)}
-                ` : ""}
-              </div>
-            `;
-          }).join("")}
         </div>
-      `);
-    }
-  }
+      `).join('')}
+    </div>
+  `;
 
-  // Most unread genres + suggestions
-  let unreadGenresHtml = "";
-  if (byUnread.length > 0) {
-    unreadGenresHtml = statCard("Plus gros backlog par genre", `
-      <div class="flex flex-col gap-3">
-        ${byUnread.slice(0, 5).map(([genre, s]) => {
-          const pct = Math.round((s.read / s.total) * 100);
-          return `
-            <div class="p-3 bg-base-200 rounded-sm">
-              <div class="flex justify-between text-sm mb-1">
-                <span class="font-medium">${genre}</span>
-                <span class="opacity-60">${s.unread} non lu${s.unread > 1 ? "s" : ""} / ${s.total}</span>
-              </div>
-              <progress class="progress progress-primary w-full h-2" value="${s.read}" max="${s.total}"></progress>
-              ${suggestionCards(s.books, 3)}
+  // --- Waffle + rating dist side by side ---
+  const wafflePanelHtml = `
+    <div class="card card-border bg-base-100">
+      <div class="card-body p-5">
+        <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Progression visuelle</h3>
+        <div class="flex items-center gap-4">
+          <div class="grid grid-cols-10 gap-[3px]">${waffleHtml}</div>
+          <div class="flex flex-col gap-1 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 bg-success inline-block"></span>
+              <span>Lus · ${readCount}</span>
             </div>
-          `;
-        }).join("")}
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 bg-base-300 inline-block"></span>
+              <span>Non lus · ${unreadCount}</span>
+            </div>
+          </div>
+        </div>
       </div>
-    `);
+    </div>
+  `;
+
+  let ratingDistHtml = "";
+  if (ratedBooks.length > 0) {
+    ratingDistHtml = `
+      <div class="card card-border bg-base-100">
+        <div class="card-body p-5">
+          <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Distribution des notes</h3>
+          <div class="flex items-end gap-1.5" style="height:80px;">
+            ${ratingDist.map((count, i) => {
+              const h = Math.max(6, (count / maxRatingCount) * 100);
+              return `
+                <div class="flex-1 flex flex-col items-center justify-end h-full gap-1">
+                  <span class="text-[10px] opacity-50">${count}</span>
+                  <div class="w-full rounded-sm" style="height:${h}%; background: ${['#ef4444','#f97316','#eab308','#84cc16','#22c55e'][i]};"></div>
+                  <span class="text-[10px] font-medium">${i + 1}★</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      </div>
+    `;
   }
 
-  // Least explored genres
-  let leastExploredHtml = "";
-  if (byLeastRead.length > 0) {
-    const toExplore = byLeastRead.filter(([, , pct]) => pct < 80);
-    if (toExplore.length > 0) {
-      leastExploredHtml = statCard("Genres les moins explorés", `
-        <div class="flex flex-col gap-3">
-          ${toExplore.slice(0, 5).map(([genre, s, pct]) => `
-            <div class="p-3 bg-base-200 rounded-sm">
-              <div class="flex justify-between text-sm mb-1">
-                <span class="font-medium">${genre}</span>
-                <span class="opacity-60">${pct}% lu</span>
-              </div>
-              <progress class="progress progress-accent w-full h-2" value="${pct}" max="100"></progress>
-              ${suggestionCards(s.books, 3)}
+  // --- Storage bar (full width) ---
+  const storageHtml = `
+    <div class="card card-border bg-base-100">
+      <div class="card-body p-5">
+        <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Bibliothèque par genre principal</h3>
+        <div class="flex w-full h-8 overflow-hidden mb-3">
+          ${storageSegments.map(s =>
+            `<div style="width:${s.pct}%;background:${s.color};min-width:${s.pct > 2 ? '0' : '3px'};" class="h-full relative group">
+              <div class="absolute inset-0 flex items-center justify-center text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style="text-shadow:0 0 3px rgba(0,0,0,0.5);">${s.count}</div>
+            </div>`
+          ).join("")}
+        </div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1">
+          ${storageSegments.map(s => `
+            <div class="flex items-center gap-1.5 text-xs">
+              <span class="w-2 h-2 flex-shrink-0" style="background:${s.color};"></span>
+              <span>${s.genre}</span>
+              <span class="opacity-40">${s.count} · ${Math.round(s.pct)}%</span>
             </div>
           `).join("")}
         </div>
-      `);
+      </div>
+    </div>
+  `;
+
+  // --- Records: longest / shortest / top author (visual cards) ---
+  let recordsHtml = `
+    <div class="card card-border bg-base-100">
+      <div class="card-body p-5">
+        <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Records</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">`;
+  if (longestBook.book) {
+    recordsHtml += `
+          <div class="bg-base-200 p-4 text-center">
+            <div class="text-2xl font-bold">${longestBook.pages}</div>
+            <div class="text-[10px] uppercase opacity-50 tracking-wide mb-1">pages</div>
+            <div class="text-xs font-medium truncate">${longestBook.book.title}</div>
+            <div class="text-[10px] opacity-40">Le plus long</div>
+          </div>`;
+  }
+  if (shortestBook.book) {
+    recordsHtml += `
+          <div class="bg-base-200 p-4 text-center">
+            <div class="text-2xl font-bold">${shortestBook.pages}</div>
+            <div class="text-[10px] uppercase opacity-50 tracking-wide mb-1">pages</div>
+            <div class="text-xs font-medium truncate">${shortestBook.book.title}</div>
+            <div class="text-[10px] opacity-40">Le plus court</div>
+          </div>`;
+  }
+  if (topAuthorsRead.length > 0) {
+    recordsHtml += `
+          <div class="bg-base-200 p-4 text-center">
+            <div class="text-2xl font-bold">${topAuthorsRead[0][1]}</div>
+            <div class="text-[10px] uppercase opacity-50 tracking-wide mb-1">livres lus</div>
+            <div class="text-xs font-medium truncate">${topAuthorsRead[0][0]}</div>
+            <div class="text-[10px] opacity-40">Auteur le plus lu</div>
+          </div>`;
+  }
+  recordsHtml += `</div></div></div>`;
+
+  // --- Time card ---
+  const avgMinPerBook = readCount > 0 ? Math.round(readMinutes / readCount) : 0;
+  // Fun comparisons (all fixed-duration)
+  const timeComparisons = [
+    { mins: 480, label: 'vols Paris→New York', icon: '✈️' },
+    { mins: 70, label: 'matchs de field hockey', icon: '🏑' },  // 2×35 min
+    { mins: 9498, label: 'binges de Gilmore Girls', icon: '☕' },  // 153 ep × 42min + 4 ep × 88min (revival)
+    { mins: 480, label: 'nuits de sommeil', icon: '🛏️' },
+    { mins: 5, label: 'infusions de thé', icon: '🍵' },
+  ].map(c => {
+    const val = readMinutes / c.mins;
+    return { ...c, val };
+  }).filter(c => c.val >= 0.1)
+    .map(c => ({
+      ...c,
+      display: c.val >= 100 ? Math.round(c.val).toLocaleString('fr-FR') : c.val >= 10 ? Math.round(c.val).toString() : c.val.toFixed(1).replace('.0', '')
+    }));
+
+  // Precise human-readable duration down to the second
+  function preciseDuration(totalSecs) {
+    const parts = [];
+    let rem = Math.floor(totalSecs);
+    const y = Math.floor(rem / (365.25 * 86400));
+    if (y > 0) { parts.push(`${y} an${y > 1 ? 's' : ''}`); rem -= Math.floor(y * 365.25 * 86400); }
+    const mo = Math.floor(rem / (30.44 * 86400));
+    if (mo > 0) { parts.push(`${mo} mois`); rem -= Math.floor(mo * 30.44 * 86400); }
+    const d = Math.floor(rem / 86400);
+    if (d > 0) { parts.push(`${d} jour${d > 1 ? 's' : ''}`); rem -= d * 86400; }
+    const h = Math.floor(rem / 3600);
+    if (h > 0) { parts.push(`${h}h`); rem -= h * 3600; }
+    const m = Math.floor(rem / 60);
+    if (m > 0) { parts.push(`${m}min`); rem -= m * 60; }
+    if (rem > 0 || parts.length === 0) { parts.push(`${rem}s`); }
+    return parts.join(' ');
+  }
+  const readDurationLabel = preciseDuration(readPages * SEC_PER_PAGE);
+  const totalDurationLabel = preciseDuration(totalPages * SEC_PER_PAGE);
+
+  const timeHtml = `
+    <div class="card card-border bg-base-100">
+      <div class="card-body p-5">
+        <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Temps de lecture (1 page = 1min10)</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div class="bg-base-200 p-3 text-center">
+            <div class="text-lg font-bold">${formatTime(readMinutes)}</div>
+            <div class="text-[10px] opacity-50 uppercase">déjà lu</div>
+            <div class="text-[10px] opacity-35 mt-0.5">${readDurationLabel}</div>
+          </div>
+          <div class="bg-base-200 p-3 text-center">
+            <div class="text-lg font-bold">${formatTime(unreadMinutes)}</div>
+            <div class="text-[10px] opacity-50 uppercase">reste à lire</div>
+          </div>
+          <div class="bg-base-200 p-3 text-center">
+            <div class="text-lg font-bold">${formatTime(avgMinPerBook)}</div>
+            <div class="text-[10px] opacity-50 uppercase">moy. / livre</div>
+          </div>
+          <div class="bg-base-200 p-3 text-center">
+            <div class="text-lg font-bold">${formatTime(totalMinutes)}</div>
+            <div class="text-[10px] opacity-50 uppercase">total</div>
+            <div class="text-[10px] opacity-35 mt-0.5">${totalDurationLabel}</div>
+          </div>
+        </div>
+        ${timeComparisons.length > 0 ? `
+          <div class="text-[10px] uppercase opacity-40 tracking-wide mb-2">Ton temps de lecture équivaut à...</div>
+          <div class="flex flex-wrap gap-3">
+            ${timeComparisons.map(c => `
+              <div class="flex items-center gap-2 bg-base-200 px-3 py-2">
+                <span class="text-base">${c.icon}</span>
+                <span class="text-sm font-bold">${c.display}</span>
+                <span class="text-xs opacity-60">${c.label}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  // --- Top auteurs (horizontal bars) ---
+  let topAuthorsHtml = '';
+  if (topAuthorsOwned.length > 0) {
+    const maxAuthorCount = topAuthorsOwned[0][1];
+    topAuthorsHtml = `
+      <div class="card card-border bg-base-100">
+        <div class="card-body p-5">
+          <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Top auteurs</h3>
+          <div class="flex flex-col gap-2">
+            ${topAuthorsOwned.map(([author, count]) => {
+              const w = Math.max(8, (count / maxAuthorCount) * 100);
+              const readByAuthor = authorReadCounts[author] || 0;
+              return `
+                <div class="flex items-center gap-3">
+                  <span class="text-xs w-24 truncate text-right flex-shrink-0">${author}</span>
+                  <div class="flex-1 bg-base-200 h-5 relative overflow-hidden">
+                    <div class="h-full bg-primary/30" style="width:${w}%;"></div>
+                    <div class="h-full bg-primary/70 absolute top-0 left-0" style="width:${Math.max(2, (readByAuthor / maxAuthorCount) * 100)}%;"></div>
+                  </div>
+                  <span class="text-xs opacity-60 w-10 flex-shrink-0">${readByAuthor}/${count}</span>
+                </div>
+              `;
+            }).join('')}
+            <div class="flex items-center gap-3 mt-1 text-[10px] opacity-50">
+              <span class="w-24"></span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 bg-primary/70 inline-block"></span> lus</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 bg-primary/30 inline-block"></span> possédés</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // --- Best / Worst rated (visual star bars) ---
+  const starSvg = `<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-warning inline-block" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+
+  function ratingRankCard(title, items) {
+    if (items.length === 0) return '';
+    return `
+      <div class="card card-border bg-base-100">
+        <div class="card-body p-5">
+          <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">${title}</h3>
+          <div class="flex flex-col gap-2">
+            ${items.map(([genre, avg, count], i) => {
+              const filled = Math.round(avg);
+              let stars = '';
+              for (let s = 1; s <= 5; s++) {
+                stars += `<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 ${s <= filled ? 'text-warning' : 'text-base-300'}" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+              }
+              return `
+                <div class="flex items-center justify-between p-2 ${i === 0 ? 'bg-warning/8' : 'bg-base-200'}">
+                  <span class="text-sm font-medium">${genre}</span>
+                  <div class="flex items-center gap-1">
+                    <div class="flex">${stars}</div>
+                    <span class="text-xs font-medium ml-1">${avg.toFixed(1)}</span>
+                    <span class="text-[10px] opacity-40">(${count})</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  const bestRatedHtml = ratingRankCard("Genres les mieux notés", byRating.slice(0, 5));
+  const worstItems = byWorstRating.filter(([, avg]) => avg < 4).slice(0, 5);
+  const worstRatedHtml = ratingRankCard("Genres les moins aimés", worstItems);
+
+  // --- Backlog (horizontal bar chart) ---
+  let backlogHtml = '';
+  if (byUnread.length > 0) {
+    const top5 = byUnread.slice(0, 5);
+    const maxUnread = top5[0][1].unread;
+    backlogHtml = `
+      <div class="card card-border bg-base-100">
+        <div class="card-body p-5">
+          <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Plus gros backlog</h3>
+          <div class="flex flex-col gap-2">
+            ${top5.map(([genre, s]) => `
+              <div class="flex items-center gap-3">
+                <span class="text-xs w-20 truncate text-right flex-shrink-0">${genre}</span>
+                <div class="flex-1 bg-base-200 h-4 overflow-hidden">
+                  <div class="h-full bg-error/50" style="width:${(s.unread / maxUnread) * 100}%;"></div>
+                </div>
+                <span class="text-xs opacity-60 w-12 flex-shrink-0">${s.unread} / ${s.total}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // --- Least explored (mini gauges row) ---
+  let leastExploredHtml = '';
+  if (byLeastRead.length > 0) {
+    const toExplore = byLeastRead.filter(([, , pct]) => pct < 80).slice(0, 5);
+    if (toExplore.length > 0) {
+      leastExploredHtml = `
+        <div class="card card-border bg-base-100">
+          <div class="card-body p-5">
+            <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Genres les moins explorés</h3>
+            <div class="flex items-center justify-around flex-wrap gap-4">
+              ${toExplore.map(([genre, , pct]) =>
+                `<div class="flex flex-col items-center gap-1">
+                  ${svgGauge(pct, `${pct}%`, '', 64, '#8b5cf6')}
+                  <span class="text-[10px] font-medium text-center max-w-16 truncate">${genre}</span>
+                </div>`
+              ).join('')}
+            </div>
+          </div>
+        </div>
+      `;
     }
   }
 
-  // Fully read genres
-  let fullyReadHtml = "";
+  // --- Fully read genres (badge strip) ---
+  let fullyReadHtml = '';
   if (fullyRead.length > 0) {
-    fullyReadHtml = statCard("Genres terminés", `
-      <div class="flex flex-wrap gap-2">
-        ${fullyRead.map(([genre, s]) => `
-          <span class="badge badge-success gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            ${genre} (${s.total})
-          </span>
-        `).join("")}
+    fullyReadHtml = `
+      <div class="card card-border bg-base-100">
+        <div class="card-body p-5">
+          <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Genres terminés</h3>
+          <div class="flex flex-wrap gap-2">
+            ${fullyRead.map(([genre, s]) => `
+              <span class="badge badge-success gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                ${genre} (${s.total})
+              </span>
+            `).join('')}
+          </div>
+        </div>
       </div>
-    `);
+    `;
   }
 
-  // Gift stats
-  let giftHtml = "";
+  // --- Gift stats (mini card) ---
+  let giftHtml = '';
   if (giftCount > 0) {
     const giftRead = lib.filter((b) => b.is_gift && b.is_read).length;
-    giftHtml = statCard("Cadeaux", `
-      <div class="flex items-center gap-4">
-        <div class="text-center">
-          <div class="text-2xl font-bold">${giftCount}</div>
-          <div class="text-xs opacity-60">reçus</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold text-success">${giftRead}</div>
-          <div class="text-xs opacity-60">lus</div>
-        </div>
-        <div class="text-center">
-          <div class="text-2xl font-bold">${giftCount - giftRead}</div>
-          <div class="text-xs opacity-60">en attente</div>
+    const giftPct = Math.round((giftRead / giftCount) * 100);
+    giftHtml = `
+      <div class="card card-border bg-base-100">
+        <div class="card-body p-5">
+          <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Cadeaux</h3>
+          <div class="flex items-center gap-6">
+            ${svgGauge(giftPct, `${giftPct}%`, `${giftRead}/${giftCount}`, 80, '#f472b6')}
+            <div class="flex flex-col gap-1 text-sm">
+              <span><b>${giftCount}</b> reçus</span>
+              <span><b class="text-success">${giftRead}</b> lus</span>
+              <span><b>${giftCount - giftRead}</b> en attente</span>
+            </div>
+          </div>
         </div>
       </div>
-    `);
+    `;
   }
 
+  // ========== ASSEMBLE DASHBOARD ==========
   container.innerHTML = `
-    <div class="max-w-4xl mx-auto">
-      ${overviewHtml}
-      <div class="grid gap-6 md:grid-cols-2">
-        ${mostPresentHtml}
+    <div class="max-w-5xl mx-auto flex flex-col gap-4">
+      ${heroHtml}
+      ${tickerHtml}
+      <div class="grid gap-4 md:grid-cols-2">
+        ${wafflePanelHtml}
+        ${ratingDistHtml}
+      </div>
+      ${storageHtml}
+      ${recordsHtml}
+      ${timeHtml}
+      <div class="grid gap-4 md:grid-cols-2">
+        ${topAuthorsHtml}
+        ${backlogHtml}
+      </div>
+      <div class="grid gap-4 md:grid-cols-2">
         ${bestRatedHtml}
-        ${unreadGenresHtml}
-        ${leastExploredHtml}
         ${worstRatedHtml}
+      </div>
+      ${leastExploredHtml}
+      <div class="grid gap-4 md:grid-cols-2">
         ${fullyReadHtml}
         ${giftHtml}
       </div>
