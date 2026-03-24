@@ -504,6 +504,9 @@ function showPage(pageId) {
   if (pageId === "challenge-page") {
     displayChallenge();
   }
+  if (pageId === "loans-page") {
+    loadLoans().then(() => displayLoans());
+  }
 }
 
 // --- Affichage des livres ---
@@ -1966,6 +1969,122 @@ function toggleGiftInput() {
   }
 }
 
+// --- Emprunts ---
+let loans = [];
+
+async function loadLoans() {
+  loans = await api('loans.php');
+}
+
+function displayLoans() {
+  const container = document.getElementById("loans-container");
+  const select = document.getElementById("loan-book");
+
+  // Populate book selector
+  const lib = libraryBooks();
+  select.innerHTML = '<option disabled selected>Choisir un livre...</option>';
+  lib.sort((a, b) => a.title.localeCompare(b.title, 'fr')).forEach(b => {
+    select.innerHTML += `<option value="${b.id}">${b.title} — ${b.author}</option>`;
+  });
+
+  // Set default date to today
+  document.getElementById("loan-date").valueAsDate = new Date();
+
+  const active = loans.filter(l => !l.returned_date);
+  const returned = loans.filter(l => l.returned_date);
+
+  let html = '';
+
+  // Active loans
+  html += `<h3 class="font-medium text-sm opacity-60 mb-3">${active.length} emprunt${active.length > 1 ? 's' : ''} en cours</h3>`;
+  if (active.length === 0) {
+    html += `<div class="text-center py-8 opacity-40 text-sm mb-6">Aucun livre emprunté en ce moment</div>`;
+  } else {
+    html += `<div class="flex flex-col gap-2 mb-6">`;
+    active.forEach(loan => {
+      const days = Math.floor((new Date() - new Date(loan.loan_date)) / (1000 * 60 * 60 * 24));
+      html += `
+        <div class="card card-border bg-base-100">
+          <div class="card-body p-4 flex-row items-center justify-between gap-4">
+            <div class="flex-1">
+              <div class="font-medium text-sm">${loan.title}</div>
+              <div class="text-xs opacity-60">${loan.author}</div>
+              <div class="text-xs mt-1">
+                <span class="badge badge-sm badge-outline">${loan.person}</span>
+                <span class="opacity-40 ml-2">depuis le ${new Date(loan.loan_date).toLocaleDateString('fr-FR')} (${days}j)</span>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="returnLoan(${loan.id})" class="btn btn-sm btn-success btn-outline">Rendu</button>
+              <button onclick="deleteLoan(${loan.id})" class="btn btn-sm btn-ghost btn-error">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  // Returned loans history
+  if (returned.length > 0) {
+    html += `<h3 class="font-medium text-sm opacity-60 mb-3">Historique (${returned.length})</h3>`;
+    html += `<div class="flex flex-col gap-1">`;
+    returned.forEach(loan => {
+      html += `
+        <div class="flex items-center justify-between p-3 bg-base-100 rounded-sm border border-base-300 opacity-50">
+          <div class="flex-1">
+            <span class="text-sm">${loan.title}</span>
+            <span class="text-xs opacity-60 ml-2">— ${loan.person}</span>
+          </div>
+          <div class="text-xs opacity-40">
+            ${new Date(loan.loan_date).toLocaleDateString('fr-FR')} → ${new Date(loan.returned_date).toLocaleDateString('fr-FR')}
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+async function addLoan() {
+  const bookId = parseInt(document.getElementById("loan-book").value);
+  const person = document.getElementById("loan-person").value.trim();
+  const loanDate = document.getElementById("loan-date").value;
+
+  if (!bookId || !person) {
+    if (!bookId) document.getElementById("loan-book").classList.add("select-error");
+    if (!person) document.getElementById("loan-person").classList.add("input-error");
+    setTimeout(() => {
+      document.getElementById("loan-book").classList.remove("select-error");
+      document.getElementById("loan-person").classList.remove("input-error");
+    }, 2000);
+    return;
+  }
+
+  await api('loans.php', 'POST', { book_id: bookId, person, loan_date: loanDate });
+  await loadLoans();
+
+  // Reset form
+  document.getElementById("loan-book").selectedIndex = 0;
+  document.getElementById("loan-person").value = "";
+
+  displayLoans();
+}
+
+async function returnLoan(id) {
+  await api('loans.php', 'POST', { action: 'return', id });
+  await loadLoans();
+  displayLoans();
+}
+
+async function deleteLoan(id) {
+  await api('loans.php', 'DELETE', { id });
+  await loadLoans();
+  displayLoans();
+}
+
 // --- Exposer les fonctions au scope global (nécessaire pour onclick en mode module) ---
 window.showPage = showPage;
 window.addBook = addBook;
@@ -1998,6 +2117,9 @@ window.selectColorSwatch = selectColorSwatch;
 window.applyBookFilter = applyBookFilter;
 window.applyBookSort = applyBookSort;
 window.clearBookFilter = clearBookFilter;
+window.addLoan = addLoan;
+window.returnLoan = returnLoan;
+window.deleteLoan = deleteLoan;
 
 // --- Initialisation ---
 document.addEventListener("DOMContentLoaded", async () => {

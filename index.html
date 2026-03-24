@@ -47,6 +47,9 @@
           <button role="tab" class="tab" onclick="showPage('random-page')">
             Quiz lecture
           </button>
+          <button role="tab" class="tab" onclick="showPage('loans-page')">
+            Emprunts
+          </button>
         </div>
       </header>
 
@@ -167,6 +170,26 @@
         <div class="max-w-md mx-auto">
           <div id="quiz-container"></div>
         </div>
+      </div>
+
+      <!-- Page Emprunts -->
+      <div id="loans-page" class="page">
+        <div class="card card-border bg-base-100 mb-6">
+          <div class="card-body">
+            <h2 class="card-title">Noter un emprunt</h2>
+            <div class="grid gap-4 md:grid-cols-3">
+              <select id="loan-book" class="select w-full">
+                <option disabled selected>Choisir un livre...</option>
+              </select>
+              <input type="text" id="loan-person" class="input w-full" placeholder="Emprunté par..." />
+              <input type="date" id="loan-date" class="input w-full" />
+            </div>
+            <div class="card-actions mt-4">
+              <button onclick="addLoan()" class="btn btn-primary">Enregistrer l'emprunt</button>
+            </div>
+          </div>
+        </div>
+        <div id="loans-container"></div>
       </div>
 
       <!-- Page Statistiques -->
