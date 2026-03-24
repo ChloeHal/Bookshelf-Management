@@ -4,6 +4,10 @@ let challenge = null;
 let editMode = false;
 let editRating = 0;
 
+// --- Filtres & tri pour "Tous mes livres" ---
+let bookFilter = { status: 'all', genre: 'all', author: 'all', search: '' };
+let bookSort = { key: 'title', dir: 'asc' };
+
 // --- Constantes pour la bibliothèque visuelle ---
 const BOOK_COLORS = [
   '#2c2c2c', // noir
@@ -504,6 +508,23 @@ function showPage(pageId) {
 }
 
 // --- Affichage des livres ---
+function applyBookFilter(key, value) {
+  bookFilter[key] = value;
+  displayBooks();
+}
+
+function applyBookSort(value) {
+  const [key, dir] = value.split('-');
+  bookSort.key = key;
+  bookSort.dir = dir;
+  displayBooks();
+}
+
+function clearBookFilter(key) {
+  bookFilter[key] = key === 'search' ? '' : 'all';
+  displayBooks();
+}
+
 function displayBooks() {
   const container = document.getElementById("books-container");
   const stats = document.getElementById("stats");
@@ -520,13 +541,111 @@ function displayBooks() {
     return;
   }
 
+  // Collect all genres & authors for filter dropdowns
+  const allGenres = new Set();
+  const allAuthors = new Set();
+  lib.forEach(b => {
+    b.genres.forEach(g => allGenres.add(g));
+    allAuthors.add(b.author);
+  });
+  const sortedGenres = [...allGenres].sort((a, b) => a.localeCompare(b, 'fr'));
+  const sortedAuthors = [...allAuthors].sort((a, b) => a.localeCompare(b, 'fr'));
+
+  // Apply filters
+  let filtered = lib.filter(b => {
+    if (bookFilter.status === 'read' && !b.is_read) return false;
+    if (bookFilter.status === 'unread' && b.is_read) return false;
+    if (bookFilter.status === 'rated' && !b.rating) return false;
+    if (bookFilter.status === 'gift' && !b.is_gift) return false;
+    if (bookFilter.genre !== 'all' && !b.genres.includes(bookFilter.genre)) return false;
+    if (bookFilter.author !== 'all' && b.author !== bookFilter.author) return false;
+    if (bookFilter.search) {
+      const q = bookFilter.search.toLowerCase();
+      if (!b.title.toLowerCase().includes(q) && !b.author.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  // Apply sort
+  const dir = bookSort.dir === 'asc' ? 1 : -1;
+  filtered.sort((a, b) => {
+    switch (bookSort.key) {
+      case 'title': return dir * a.title.localeCompare(b.title, 'fr');
+      case 'author': return dir * a.author.localeCompare(b.author, 'fr');
+      case 'rating': return dir * ((a.rating || 0) - (b.rating || 0));
+      case 'pages': return dir * ((a.page_count || 0) - (b.page_count || 0));
+      case 'year': return dir * ((a.year || 0) - (b.year || 0));
+      default: return 0;
+    }
+  });
+
+  const sortValue = `${bookSort.key}-${bookSort.dir}`;
+  const hasActiveFilter = bookFilter.status !== 'all' || bookFilter.genre !== 'all' || bookFilter.author !== 'all' || bookFilter.search;
+
+  // Active filter badges
+  const filterLabels = { read: 'Lus', unread: 'Non lus', rated: 'Notés', gift: 'Cadeaux' };
+  let activeBadges = '';
+  if (bookFilter.status !== 'all') activeBadges += `<span class="badge badge-sm gap-1">${filterLabels[bookFilter.status]}<button onclick="clearBookFilter('status')" class="text-error font-bold">×</button></span>`;
+  if (bookFilter.genre !== 'all') activeBadges += `<span class="badge badge-sm gap-1">${bookFilter.genre}<button onclick="clearBookFilter('genre')" class="text-error font-bold">×</button></span>`;
+  if (bookFilter.author !== 'all') activeBadges += `<span class="badge badge-sm gap-1">${bookFilter.author}<button onclick="clearBookFilter('author')" class="text-error font-bold">×</button></span>`;
+  if (bookFilter.search) activeBadges += `<span class="badge badge-sm gap-1">"${bookFilter.search}"<button onclick="clearBookFilter('search')" class="text-error font-bold">×</button></span>`;
+
   stats.innerHTML = `
-    <div class="flex flex-col gap-2 w-full">
-      <div class="text-sm opacity-60">📚 ${lib.length} livre${lib.length > 1 ? "s" : ""}</div>
+    <div class="flex flex-col gap-3 w-full mb-4">
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="input input-sm flex items-center gap-2 flex-1 min-w-48 max-w-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Rechercher un titre ou auteur..." value="${bookFilter.search}" oninput="applyBookFilter('search', this.value)" class="grow bg-transparent outline-none text-sm" />
+        </label>
+        <select class="select select-sm" onchange="applyBookFilter('status', this.value)">
+          <option value="all" ${bookFilter.status === 'all' ? 'selected' : ''}>Statut</option>
+          <option value="read" ${bookFilter.status === 'read' ? 'selected' : ''}>Lus</option>
+          <option value="unread" ${bookFilter.status === 'unread' ? 'selected' : ''}>Non lus</option>
+          <option value="rated" ${bookFilter.status === 'rated' ? 'selected' : ''}>Notés</option>
+          <option value="gift" ${bookFilter.status === 'gift' ? 'selected' : ''}>Cadeaux</option>
+        </select>
+        <select class="select select-sm" onchange="applyBookFilter('genre', this.value)">
+          <option value="all" ${bookFilter.genre === 'all' ? 'selected' : ''}>Genre</option>
+          ${sortedGenres.map(g => `<option value="${g}" ${bookFilter.genre === g ? 'selected' : ''}>${g}</option>`).join('')}
+        </select>
+        <select class="select select-sm" onchange="applyBookFilter('author', this.value)">
+          <option value="all" ${bookFilter.author === 'all' ? 'selected' : ''}>Auteur</option>
+          ${sortedAuthors.map(a => `<option value="${a}" ${bookFilter.author === a ? 'selected' : ''}>${a}</option>`).join('')}
+        </select>
+        <select class="select select-sm" onchange="applyBookSort(this.value)">
+          <option value="title-asc" ${sortValue === 'title-asc' ? 'selected' : ''}>Titre A → Z</option>
+          <option value="title-desc" ${sortValue === 'title-desc' ? 'selected' : ''}>Titre Z → A</option>
+          <option value="author-asc" ${sortValue === 'author-asc' ? 'selected' : ''}>Auteur A → Z</option>
+          <option value="author-desc" ${sortValue === 'author-desc' ? 'selected' : ''}>Auteur Z → A</option>
+          <option value="rating-desc" ${sortValue === 'rating-desc' ? 'selected' : ''}>Meilleures notes</option>
+          <option value="rating-asc" ${sortValue === 'rating-asc' ? 'selected' : ''}>Notes les plus basses</option>
+          <option value="pages-desc" ${sortValue === 'pages-desc' ? 'selected' : ''}>Plus de pages</option>
+          <option value="pages-asc" ${sortValue === 'pages-asc' ? 'selected' : ''}>Moins de pages</option>
+          <option value="year-desc" ${sortValue === 'year-desc' ? 'selected' : ''}>Plus récents</option>
+          <option value="year-asc" ${sortValue === 'year-asc' ? 'selected' : ''}>Plus anciens</option>
+        </select>
+      </div>
+      ${hasActiveFilter ? `
+        <div class="flex flex-wrap items-center gap-2">
+          ${activeBadges}
+          <button onclick="bookFilter = { status: 'all', genre: 'all', author: 'all', search: '' }; displayBooks();" class="text-xs text-error opacity-60 hover:opacity-100">Tout effacer</button>
+        </div>
+      ` : ''}
+      <div class="text-xs opacity-50">${filtered.length}${filtered.length !== lib.length ? ` / ${lib.length}` : ''} livre${filtered.length > 1 ? 's' : ''}</div>
     </div>
   `;
 
-  container.innerHTML = lib
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full text-center py-12 opacity-50">
+        <div class="text-3xl mb-3">🔍</div>
+        <p class="text-sm">Aucun livre ne correspond aux filtres</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered
     .map(
       (book) => `
         <div class="card card-border bg-base-100 transition-all hover:border-primary hover:-translate-y-0.5 ${book.is_read ? "opacity-50" : ""}">
@@ -1096,6 +1215,70 @@ function displayStats() {
     `;
   }
 
+  // --- Littératures (tags starting with "littérature") ---
+  const litPrefix = 'littérature';
+  const litData = {};
+  lib.forEach(book => {
+    book.genres.filter(g => g.toLowerCase().startsWith(litPrefix)).forEach(g => {
+      const label = g.replace(/^littérature\s*/i, '').trim();
+      const key = label || g;
+      if (!litData[key]) litData[key] = { total: 0, read: 0, ratingSum: 0, ratingCount: 0, pages: 0 };
+      litData[key].total++;
+      if (book.is_read) litData[key].read++;
+      if (book.rating) { litData[key].ratingSum += book.rating; litData[key].ratingCount++; }
+      if (book.page_count) litData[key].pages += book.page_count;
+    });
+  });
+
+  let litHtml = '';
+  const litEntries = Object.entries(litData).sort((a, b) => b[1].total - a[1].total);
+  if (litEntries.length > 0) {
+    const litTotal = litEntries.reduce((s, [, d]) => s + d.total, 0);
+    const litColors = [
+      '#2b4570', '#b03a3a', '#5a8a5c', '#d4a84b', '#7b3f6a',
+      '#3a7d8c', '#c25b28', '#8c7a5a', '#5c5c8a', '#a0522d',
+      '#6a8fa0', '#4a7a4a', '#d48a8a', '#c4b078', '#3a5a3a'
+    ];
+    const litSegments = litEntries.map(([label, d], i) => ({
+      label, pct: (d.total / litTotal) * 100,
+      color: litColors[i % litColors.length], ...d
+    }));
+
+    litHtml = `
+      <div class="card card-border bg-base-100">
+        <div class="card-body p-5">
+          <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide mb-3">Littératures du monde</h3>
+          <div class="flex w-full h-6 overflow-hidden mb-3">
+            ${litSegments.map(s =>
+              `<div style="width:${s.pct}%;background:${s.color};min-width:${s.pct > 2 ? '0' : '3px'};" class="h-full relative group">
+                <div class="absolute inset-0 flex items-center justify-center text-white text-[8px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style="text-shadow:0 0 3px rgba(0,0,0,0.5);">${s.total}</div>
+              </div>`
+            ).join('')}
+          </div>
+          <div class="flex flex-col gap-2">
+            ${litSegments.map(s => {
+              const readPctLit = s.total > 0 ? Math.round((s.read / s.total) * 100) : 0;
+              const avgR = s.ratingCount > 0 ? (s.ratingSum / s.ratingCount).toFixed(1) : null;
+              return `
+                <div class="flex items-center gap-3 bg-base-200 p-2 px-3">
+                  <span class="w-2.5 h-2.5 flex-shrink-0 rounded-sm" style="background:${s.color};"></span>
+                  <span class="text-sm font-medium flex-1 capitalize">${s.label}</span>
+                  <span class="text-xs opacity-60">${s.total} livre${s.total > 1 ? 's' : ''}</span>
+                  <span class="text-xs font-medium ${readPctLit === 100 ? 'text-success' : ''}">${readPctLit}% lu</span>
+                  ${avgR ? `<span class="text-xs opacity-50">${avgR}★</span>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div class="flex items-center gap-4 mt-3 text-xs opacity-50">
+            <span>${litTotal} livre${litTotal > 1 ? 's' : ''} tagué${litTotal > 1 ? 's' : ''}</span>
+            <span>${Math.round((litTotal / lib.length) * 100)}% de la bibliothèque</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   // --- Gift stats (mini card) ---
   let giftHtml = '';
   if (giftCount > 0) {
@@ -1139,6 +1322,7 @@ function displayStats() {
         ${worstRatedHtml}
       </div>
       ${leastExploredHtml}
+      ${litHtml}
       <div class="grid gap-4 md:grid-cols-2">
         ${fullyReadHtml}
         ${giftHtml}
@@ -1745,6 +1929,9 @@ window.closeEditModal = closeEditModal;
 window.saveBookEdit = saveBookEdit;
 window.setEditRating = setEditRating;
 window.selectColorSwatch = selectColorSwatch;
+window.applyBookFilter = applyBookFilter;
+window.applyBookSort = applyBookSort;
+window.clearBookFilter = clearBookFilter;
 
 // --- Initialisation ---
 document.addEventListener("DOMContentLoaded", async () => {
