@@ -490,8 +490,7 @@ function showPage(pageId) {
     displayShelf();
   }
   if (pageId === "random-page") {
-    updateGenreSelect();
-    document.getElementById("random-result").classList.add("hidden");
+    startGenreQuiz();
   }
   if (pageId === "list-page") {
     displayBooks();
@@ -1528,83 +1527,133 @@ async function deleteBook(bookId, fromWishlist = false) {
   }
 }
 
-// --- Genres ---
-function updateGenreSelect() {
-  const select = document.getElementById("genre-select");
+// --- Quiz de genre ---
+let quizState = null;
+
+function startGenreQuiz() {
   const allGenres = new Set();
+  libraryBooks().forEach(b => b.genres.forEach(g => allGenres.add(g)));
+  const genres = [...allGenres];
 
-  libraryBooks().forEach((book) => {
-    book.genres.forEach((genre) => allGenres.add(genre));
-  });
-
-  select.innerHTML = '<option disabled selected>Sélectionner un genre</option>';
-
-  if (allGenres.size === 0) {
-    select.innerHTML +=
-      '<option value="" disabled>Aucun genre disponible</option>';
+  if (genres.length < 2) {
+    document.getElementById("quiz-container").innerHTML = `
+      <div class="card card-border bg-base-100"><div class="card-body text-center">
+        <p class="opacity-60">Il faut au moins 2 genres dans ta bibliothèque pour lancer le quiz.</p>
+      </div></div>`;
     return;
   }
 
-  Array.from(allGenres)
-    .sort()
-    .forEach((genre) => {
-      const count = libraryBooks().filter((book) =>
-        book.genres.includes(genre)
-      ).length;
-      select.innerHTML += `<option value="${genre}">${genre} (${count})</option>`;
-    });
+  // Shuffle genres and pick challengers from the pool
+  const shuffled = [...genres].sort(() => Math.random() - 0.5);
+  const champion = shuffled[0];
+  const challengers = shuffled.slice(1);
+
+  quizState = { champion, challengers, round: 0, totalRounds: 7 };
+  showQuizRound();
 }
 
-// --- Livre aléatoire ---
-function getRandomBook() {
-  const selectedGenre = document.getElementById("genre-select").value;
-  const resultDiv = document.getElementById("random-result");
-  const contentDiv = document.getElementById("random-book-content");
+function showQuizRound() {
+  const container = document.getElementById("quiz-container");
+  const { champion, challengers, round, totalRounds } = quizState;
 
-  if (!selectedGenre) {
-    const select = document.getElementById("genre-select");
-    select.classList.add("select-error");
-    setTimeout(() => {
-      select.classList.remove("select-error");
-    }, 2000);
+  if (round >= totalRounds || challengers.length === 0) {
+    showQuizResults();
     return;
   }
 
-  const filteredBooks = libraryBooks().filter((book) =>
-    book.genres.includes(selectedGenre)
-  );
+  // Pick a random challenger (different from champion)
+  const idx = Math.floor(Math.random() * challengers.length);
+  const challenger = challengers[idx];
 
-  if (filteredBooks.length === 0) {
-    contentDiv.innerHTML = `
-      <p class="text-center opacity-60">Aucun livre trouvé pour ce genre</p>
-    `;
-    resultDiv.classList.remove("hidden");
-    return;
-  }
+  // Randomize display order so champion isn't always on top
+  const swap = Math.random() > 0.5;
+  const top = swap ? challenger : champion;
+  const bottom = swap ? champion : challenger;
 
-  resultDiv.classList.remove("hidden");
+  quizState.currentDisplay = [top, bottom];
+  quizState.challengerIdx = idx;
 
-  let count = 0;
-  const totalSpins = 15;
-  const interval = setInterval(() => {
-    const random = filteredBooks[Math.floor(Math.random() * filteredBooks.length)];
-    contentDiv.innerHTML = `
-      <h3 class="font-medium text-lg mb-2">${random.title}</h3>
-      <p class="text-sm opacity-60 mb-3">${random.author}</p>
-      <div class="flex flex-wrap gap-1">
-        ${random.genres
-          .map(
-            (genre) =>
-              `<span class="badge badge-outline badge-sm">${genre}</span>`
-          )
-          .join("")}
+  const progress = (round / totalRounds) * 100;
+
+  container.innerHTML = `
+    <div class="card card-border bg-base-100">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="card-title text-lg">Quel genre te tente ?</h2>
+          <span class="text-xs opacity-50">Question ${round + 1} / ${totalRounds}</span>
+        </div>
+        <progress class="progress progress-primary w-full mb-6" value="${progress}" max="100"></progress>
+
+        <div class="flex flex-col gap-3">
+          <button onclick="pickQuizGenre('${top.replace(/'/g, "\\'")}')" class="btn btn-outline btn-lg justify-start text-left h-auto py-4 normal-case">
+            <span class="text-base">${top}</span>
+          </button>
+          <div class="text-center text-xs opacity-40 font-bold">OU</div>
+          <button onclick="pickQuizGenre('${bottom.replace(/'/g, "\\'")}')" class="btn btn-outline btn-lg justify-start text-left h-auto py-4 normal-case">
+            <span class="text-base">${bottom}</span>
+          </button>
+        </div>
       </div>
-    `;
-    count++;
-    if (count >= totalSpins) {
-      clearInterval(interval);
-    }
-  }, 100);
+    </div>
+  `;
+}
+
+function pickQuizGenre(chosen) {
+  const { champion, challengers, challengerIdx } = quizState;
+
+  // The winner becomes the new champion
+  quizState.champion = chosen;
+
+  // Remove the used challenger from the pool
+  challengers.splice(challengerIdx, 1);
+
+  quizState.round++;
+  showQuizRound();
+}
+
+function showQuizResults() {
+  const container = document.getElementById("quiz-container");
+  const winnerGenre = quizState.champion;
+
+  const matchingBooks = libraryBooks().filter(b => b.genres.includes(winnerGenre));
+
+  let booksHtml = '';
+  if (matchingBooks.length === 0) {
+    booksHtml = `<p class="opacity-60 text-center py-4">Aucun livre trouvé pour ce genre.</p>`;
+  } else {
+    booksHtml = matchingBooks.map(book => `
+      <div class="flex justify-between items-center p-3 bg-base-200 rounded-sm border border-base-300 ${book.is_read ? 'opacity-50' : ''}">
+        <div class="flex-1">
+          <div class="font-medium text-sm flex items-center gap-2">
+            <span>${book.title}</span>
+            ${book.is_read ? '<span class="text-xs text-success">Lu</span>' : ''}
+          </div>
+          <div class="text-xs opacity-60">${book.author}</div>
+        </div>
+        ${book.rating ? `<div class="text-xs opacity-60">${'★'.repeat(book.rating)}${'☆'.repeat(5 - book.rating)}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  container.innerHTML = `
+    <div class="card card-border bg-base-100 mb-4">
+      <div class="card-body text-center">
+        <div class="text-3xl mb-2">🏆</div>
+        <h2 class="card-title justify-center text-xl mb-1">${winnerGenre}</h2>
+        <p class="text-sm opacity-60 mb-4">Le genre qui te tente le plus aujourd'hui !</p>
+        <button onclick="startGenreQuiz()" class="btn btn-primary btn-sm">Recommencer le quiz</button>
+      </div>
+    </div>
+
+    <div class="card card-border bg-base-100">
+      <div class="card-body">
+        <h3 class="font-medium text-sm opacity-60 mb-3">${matchingBooks.length} livre${matchingBooks.length > 1 ? 's' : ''} en ${winnerGenre}</h3>
+        <div class="flex flex-col gap-2">
+          ${booksHtml}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // --- Challenge de lecture ---
@@ -1761,6 +1810,13 @@ function spinRoulette() {
   const unread = (challenge.books || []).filter((b) => !b.is_read);
   if (unread.length === 0) return;
 
+  // Add jokers to the pool (1 joker per 3 real books, minimum 1)
+  const jokerCount = Math.max(1, Math.floor(unread.length / 3));
+  const pool = [
+    ...unread.map(b => ({ type: 'book', title: b.title, author: b.author })),
+    ...Array(jokerCount).fill({ type: 'joker', title: 'JOKER', author: 'Choisis librement dans ta bibliothèque !' })
+  ];
+
   const resultDiv = document.getElementById("roulette-result");
   const titleDiv = document.getElementById("roulette-book-title");
   const authorDiv = document.getElementById("roulette-book-author");
@@ -1770,13 +1826,22 @@ function spinRoulette() {
   let count = 0;
   const totalSpins = 15;
   const interval = setInterval(() => {
-    const random = unread[Math.floor(Math.random() * unread.length)];
+    const random = pool[Math.floor(Math.random() * pool.length)];
     titleDiv.textContent = random.title;
     authorDiv.textContent = random.author;
     resultDiv.classList.remove("hidden");
+
+    if (random.type === 'joker') {
+      titleDiv.innerHTML = `<span class="text-warning">🃏 JOKER</span>`;
+    }
+
     count++;
     if (count >= totalSpins) {
       clearInterval(interval);
+      if (random.type === 'joker') {
+        titleDiv.innerHTML = `<span class="text-warning text-2xl">🃏 JOKER !</span>`;
+        authorDiv.textContent = 'Tu peux choisir n\'importe quel livre de ta bibliothèque !';
+      }
     }
   }, 100);
 }
@@ -1906,7 +1971,8 @@ window.showPage = showPage;
 window.addBook = addBook;
 window.deleteBook = deleteBook;
 window.toggleRead = toggleRead;
-window.getRandomBook = getRandomBook;
+window.startGenreQuiz = startGenreQuiz;
+window.pickQuizGenre = pickQuizGenre;
 window.createChallenge = createChallenge;
 window.deleteChallenge = deleteChallenge;
 window.addToChallenge = addToChallenge;

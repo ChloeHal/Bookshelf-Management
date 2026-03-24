@@ -45,7 +45,7 @@
             Statistiques
           </button>
           <button role="tab" class="tab" onclick="showPage('random-page')">
-            Livre aléatoire
+            Quiz lecture
           </button>
         </div>
       </header>
@@ -162,31 +162,10 @@
         ></div>
       </div>
 
-      <!-- Page Livre Aléatoire -->
+      <!-- Page Quizz Genre -->
       <div id="random-page" class="page">
         <div class="max-w-md mx-auto">
-          <div class="card card-border bg-base-100 mb-6">
-            <div class="card-body">
-              <h2 class="card-title">Découvrir un livre</h2>
-              <select id="genre-select" class="select w-full">
-                <option disabled selected>Sélectionner un genre</option>
-              </select>
-              <button onclick="getRandomBook()" class="btn btn-primary w-full">
-                Obtenir une suggestion
-              </button>
-            </div>
-          </div>
-
-          <div id="random-result" class="hidden">
-            <div class="card card-border bg-base-100">
-              <div class="card-body">
-                <div class="text-xs uppercase tracking-wide text-primary mb-3">
-                  Suggestion de lecture
-                </div>
-                <div id="random-book-content"></div>
-              </div>
-            </div>
-          </div>
+          <div id="quiz-container"></div>
         </div>
       </div>
 
