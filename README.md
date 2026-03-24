@@ -4,10 +4,14 @@ Application web de gestion de bibliothèque personnelle avec challenge de lectur
 
 ## Fonctionnalités
 
-- **Catalogue de livres** : parcourir, ajouter et supprimer des livres
-- **Marquer comme lu** : suivre ses lectures
-- **Challenge de lecture** : se fixer un objectif annuel et suivre sa progression
-- **Livre aléatoire** : obtenir une suggestion par genre
+- **Bibliothèque visuelle** : étagère interactive avec tranches colorées et personnalisables
+- **Catalogue de livres** : parcourir, ajouter, modifier et supprimer des livres avec filtres et tri
+- **Marquer comme lu / noter** : suivre ses lectures et attribuer des notes sur 5 étoiles
+- **Wishlist** : gérer une liste de livres souhaités et les marquer comme achetés
+- **Challenge de lecture** : se fixer un objectif annuel, suivre sa progression avec roulette et jokers
+- **Quiz lecture** : quiz en élimination directe entre genres pour trouver quoi lire
+- **Emprunts** : noter qui emprunte quel livre, depuis quand, et marquer les retours
+- **Statistiques** : tableaux de bord avec jauges, graphiques, records et classements
 - **Base de données** : persistance via MySQL (API PHP)
 
 ## Stack technique
@@ -83,7 +87,11 @@ Chaque push sur `main` déclenche le build et le déploiement automatique.
 │   ├── config.example.php        # Template de configuration BDD
 │   ├── books.php                 # CRUD livres
 │   ├── read.php                  # Toggle lu/non lu
+│   ├── rate.php                  # Notes (1-5 étoiles)
+│   ├── wishlist.php              # Wishlist (marquer comme acheté)
 │   ├── challenge.php             # CRUD challenge
+│   ├── loans.php                 # Gestion des emprunts
+│   ├── migrate.php               # Migrations de schéma
 │   └── seed.php                  # Import initial des livres
 └── .github/workflows/
     └── deploy.yml                # Déploiement automatique
