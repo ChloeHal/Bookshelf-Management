@@ -108,6 +108,22 @@
                 min="2000"
                 max="2030"
               />
+              <button type="button" onclick="toggleAddExtras()" class="btn btn-ghost btn-xs opacity-50" id="add-extras-btn">+ Voir plus</button>
+            </div>
+            <div id="add-extras" class="hidden mt-3">
+              <div class="grid gap-4 md:grid-cols-3">
+                <input type="number" id="book-pages" class="input w-full" placeholder="Nombre de pages" min="1" />
+                <select id="book-size" class="select w-full">
+                  <option value="" disabled selected>Taille</option>
+                  <option value="1">Petit</option>
+                  <option value="2">Moyen</option>
+                  <option value="3">Grand</option>
+                </select>
+                <div class="flex items-center gap-2">
+                  <input type="color" id="book-color" class="w-8 h-8 cursor-pointer border border-base-300" value="#2c2c2c" />
+                  <div id="add-color-swatches" class="flex flex-wrap gap-1"></div>
+                </div>
+              </div>
             </div>
             <div class="card-actions mt-4">
               <button onclick="addBook()" class="btn btn-primary">

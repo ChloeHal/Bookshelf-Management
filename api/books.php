@@ -36,8 +36,12 @@ switch ($method) {
             exit;
         }
 
-        $stmt = $pdo->prepare('INSERT INTO books (title, author, genres, year, is_gift, is_wishlist) VALUES (?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$title, $author, json_encode($genres), $year, $is_gift, $is_wishlist]);
+        $page_count = !empty($data['page_count']) ? (int) $data['page_count'] : null;
+        $size = !empty($data['size']) ? (int) $data['size'] : null;
+        $color = !empty($data['color']) ? $data['color'] : null;
+
+        $stmt = $pdo->prepare('INSERT INTO books (title, author, genres, year, is_gift, is_wishlist, page_count, size, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$title, $author, json_encode($genres), $year, $is_gift, $is_wishlist, $page_count, $size, $color]);
 
         echo json_encode(['id' => (int) $pdo->lastInsertId(), 'success' => true]);
         break;

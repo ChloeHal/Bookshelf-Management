@@ -1454,6 +1454,31 @@ async function toggleRead(bookId) {
   displayBooks();
 }
 
+// --- Voir plus / moins dans le formulaire d'ajout ---
+function toggleAddExtras() {
+  const extras = document.getElementById("add-extras");
+  const btn = document.getElementById("add-extras-btn");
+  const isHidden = extras.classList.toggle("hidden");
+  btn.textContent = isHidden ? "+ Voir plus" : "- Voir moins";
+  if (!isHidden) renderAddColorSwatches();
+}
+
+function renderAddColorSwatches() {
+  const container = document.getElementById('add-color-swatches');
+  const colorInput = document.getElementById('book-color');
+  container.innerHTML = BOOK_COLORS.map(c => {
+    const isSelected = c.toLowerCase() === colorInput.value.toLowerCase();
+    return `<button type="button" onclick="selectAddColorSwatch('${c}')"
+      style="background: ${c}; width: 24px; height: 24px; border: 2px solid ${isSelected ? '#fff' : 'transparent'}; outline: ${isSelected ? '2px solid #6b5c4a' : 'none'}; cursor: pointer;"
+      class="rounded-sm"></button>`;
+  }).join('');
+}
+
+function selectAddColorSwatch(color) {
+  document.getElementById('book-color').value = color;
+  renderAddColorSwatches();
+}
+
 // --- Ajouter un livre ---
 async function addBook() {
   const titleEl = document.getElementById("book-title");
@@ -1466,6 +1491,14 @@ async function addBook() {
   const genresInput = genresEl.value.trim();
   const is_gift = giftEl.checked;
   const year = !is_gift && yearEl.value ? parseInt(yearEl.value) : null;
+
+  const pagesEl = document.getElementById("book-pages");
+  const sizeEl = document.getElementById("book-size");
+  const colorEl = document.getElementById("book-color");
+  const extrasVisible = !document.getElementById("add-extras").classList.contains("hidden");
+  const page_count = pagesEl.value ? parseInt(pagesEl.value) : null;
+  const size = sizeEl.value ? parseInt(sizeEl.value) : null;
+  const color = extrasVisible ? colorEl.value : null;
 
   titleEl.classList.remove("input-error");
   authorEl.classList.remove("input-error");
@@ -1490,7 +1523,7 @@ async function addBook() {
     .filter((g) => g)
     .slice(0, 3);
 
-  const result = await api('books.php', 'POST', { title, author, genres, year, is_gift });
+  const result = await api('books.php', 'POST', { title, author, genres, year, is_gift, page_count, size, color });
 
   if (result.error) {
     alert(result.error);
@@ -1503,6 +1536,11 @@ async function addBook() {
   giftEl.checked = false;
   yearEl.value = "";
   yearEl.disabled = false;
+  pagesEl.value = "";
+  sizeEl.selectedIndex = 0;
+  colorEl.value = "#2c2c2c";
+  document.getElementById("add-extras").classList.add("hidden");
+  document.getElementById("add-extras-btn").textContent = "+ Voir plus";
 
   await loadBooks();
   displayBooks();
@@ -2102,6 +2140,8 @@ window.openBookSelector = openBookSelector;
 window.closeBookSelector = closeBookSelector;
 window.filterBookSelector = filterBookSelector;
 window.toggleGiftInput = toggleGiftInput;
+window.toggleAddExtras = toggleAddExtras;
+window.selectAddColorSwatch = selectAddColorSwatch;
 window.addWishlistBook = addWishlistBook;
 window.markAsBought = markAsBought;
 window.rateBook = rateBook;
@@ -2129,5 +2169,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Sync color picker → swatches
   document.getElementById('edit-book-color').addEventListener('input', (e) => {
     renderColorSwatches(e.target.value);
+  });
+  document.getElementById('book-color').addEventListener('input', (e) => {
+    renderAddColorSwatches();
   });
 });
