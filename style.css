@@ -2,44 +2,49 @@
 
 @plugin "daisyui";
 @plugin "daisyui/theme" {
-  name: "daisysword";
+  name: "autumn";
   default: true;
-  color-scheme: light;
-  --color-base-100: oklch(96% 0.003 264.542);
-  --color-base-200: oklch(92% 0.006 264.531);
-  --color-base-300: oklch(87% 0.01 258.338);
-  --color-base-content: oklch(48% 0.243 264.376);
-  --color-primary: oklch(55% 0.027 264.364);
-  --color-primary-content: oklch(97% 0.013 236.62);
-  --color-secondary: oklch(44% 0.03 256.802);
-  --color-secondary-content: oklch(97% 0.014 254.604);
-  --color-accent: oklch(37% 0.034 259.733);
-  --color-accent-content: oklch(97% 0.013 17.38);
-  --color-neutral: oklch(70% 0.022 261.325);
-  --color-neutral-content: oklch(98% 0.014 180.72);
-  --color-info: oklch(68% 0.169 237.323);
-  --color-info-content: oklch(97% 0.013 236.62);
-  --color-success: oklch(76% 0.233 130.85);
-  --color-success-content: oklch(98% 0.031 120.757);
-  --color-warning: oklch(76% 0.188 70.08);
-  --color-warning-content: oklch(98% 0.022 95.277);
-  --color-error: oklch(65% 0.241 354.308);
-  --color-error-content: oklch(97% 0.014 343.198);
-  --radius-selector: 0rem;
-  --radius-field: 0rem;
-  --radius-box: 0rem;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(97% 0.001 106.424);
+  --color-base-200: oklch(92% 0.003 48.717);
+  --color-base-300: oklch(86% 0.005 56.366);
+  --color-base-content: oklch(14% 0.004 49.25);
+  --color-primary: #FF4D00;
+  --color-primary-content: oklch(98% 0.001 106.423);
+  --color-secondary: #FF4D00;
+  --color-secondary-content: oklch(98% 0.001 106.423);
+  --color-accent: oklch(70% 0.01 56.259);
+  --color-accent-content: oklch(14% 0.004 49.25);
+  --color-neutral: oklch(44% 0.011 73.639);
+  --color-neutral-content: oklch(98% 0.001 106.423);
+  --color-info: oklch(62% 0.214 259.815);
+  --color-info-content: oklch(98% 0.001 106.423);
+  --color-success: oklch(72% 0.219 149.579);
+  --color-success-content: oklch(14% 0.004 49.25);
+  --color-warning: oklch(90% 0.182 98.111);
+  --color-warning-content: oklch(14% 0.004 49.25);
+  --color-error: oklch(63% 0.237 25.331);
+  --color-error-content: oklch(98% 0.001 106.423);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.25rem;
   --size-selector: 0.21875rem;
   --size-field: 0.21875rem;
   --border: 1px;
-  --depth: 0;
-  --noise: 0;
+  --depth: 1;
+  --noise: 1;
 }
 
-/* Lexend font override */
+/* Google Sans font override */
 body {
-  font-family: "Lexend", sans-serif;
+  font-family: "Google Sans", sans-serif;
+  font-optical-sizing: auto;
 }
 
+code, pre, kbd, .font-mono, .badge {
+  font-family: "Google Sans Code", monospace;
+}
 /* Page display toggling */
 .page {
   display: none;
