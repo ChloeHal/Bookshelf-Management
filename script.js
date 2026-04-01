@@ -343,13 +343,13 @@ function displayShelf() {
              style="width: ${props.width}px; height: ${props.height}px; background-color: ${props.color}; color: ${textColor};"
              ${clickHandler}
              title="${book.title} — ${book.author}">
-          ${ratingHtml}
-          <div class="book-title-vertical" style="font-size: ${fontSize}px;">
-            ${book.title}
-          </div>
           <div class="book-author-vertical" style="font-size: ${authorFontSize}px; color: ${textColorDim};">
             ${getLastName(book.author)}
           </div>
+          <div class="book-title-vertical" style="font-size: ${fontSize}px;">
+            ${book.title}
+          </div>
+          ${ratingHtml}
         </div>
       `;
     });

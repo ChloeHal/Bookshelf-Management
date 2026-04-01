@@ -220,7 +220,6 @@ code, pre, kbd, .font-mono, .badge {
 /* Title — vertical, bottom-to-top (French convention) */
 .book-title-vertical {
   writing-mode: vertical-rl;
-  transform: rotate(180deg);
   flex: 1;
   overflow: hidden;
   text-align: center;
@@ -237,7 +236,6 @@ code, pre, kbd, .font-mono, .badge {
 /* Author — vertical like title */
 .book-author-vertical {
   writing-mode: vertical-rl;
-  transform: rotate(180deg);
   overflow: hidden;
   text-overflow: clip;
   white-space: nowrap;
