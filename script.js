@@ -3,6 +3,8 @@ let books = [];
 let challenge = null;
 let editMode = false;
 let editRating = 0;
+let currentlyReading = [];
+let readingLog = [];
 
 // --- Filtres & tri pour "Tous mes livres" ---
 let bookFilter = { status: 'all', genre: 'all', author: 'all', search: '' };
@@ -47,6 +49,14 @@ async function loadBooks() {
 
 async function loadChallengeData() {
   challenge = await api('challenge.php');
+}
+
+async function loadCurrentlyReading() {
+  currentlyReading = await api('reading.php?action=current');
+}
+
+async function loadReadingLog() {
+  readingLog = await api('reading.php?action=heatmap');
 }
 
 // --- Helpers ---
@@ -487,6 +497,7 @@ function showPage(pageId) {
   event.target.classList.add("tab-active");
 
   if (pageId === "home-page") {
+    loadCurrentlyReading().then(() => displayCurrentlyReading());
     displayShelf();
   }
   if (pageId === "random-page") {
@@ -690,6 +701,232 @@ function displayBooks() {
     .join("");
 }
 
+// --- En cours de lecture ---
+function displayCurrentlyReading() {
+  const container = document.getElementById("currently-reading-section");
+  if (!container) return;
+
+  const addBtn = `
+    <button onclick="openReadingSelector()" class="btn btn-ghost btn-sm gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span class="text-xs">Ajouter</span>
+    </button>
+  `;
+
+  if (!currentlyReading || currentlyReading.length === 0) {
+    container.innerHTML = `
+      <div class="card card-border bg-base-100 mb-2">
+        <div class="card-body p-5">
+          <div class="flex justify-between items-center">
+            <h2 class="text-sm font-medium opacity-60 uppercase tracking-wide">En cours de lecture</h2>
+            ${addBtn}
+          </div>
+          <div class="text-center py-6 opacity-40">
+            <div class="text-3xl mb-2">📖</div>
+            <p class="text-sm">Aucun livre en cours</p>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const cardsHtml = currentlyReading.map(cr => {
+    const totalPages = cr.page_count || 0;
+    const pct = totalPages > 0 ? Math.round((cr.current_page / totalPages) * 100) : 0;
+    const pctClamped = Math.min(100, pct);
+    const color = cr.color || '#2b4570';
+    const startDate = new Date(cr.started_at);
+    const days = Math.max(1, Math.ceil((Date.now() - startDate) / 86400000));
+
+    return `
+      <div class="card card-border bg-base-100 transition-all hover:border-primary hover:-translate-y-0.5">
+        <div class="card-body p-4">
+          <div class="flex items-start gap-3">
+            <div class="w-3 rounded-sm self-stretch flex-shrink-0" style="background:${color};"></div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium text-sm truncate">${cr.title}</h3>
+              <p class="text-xs opacity-50">${cr.author}</p>
+              <div class="flex items-center gap-2 mt-2">
+                <div class="flex-1 bg-base-300 h-2 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full transition-all duration-500" style="width:${pctClamped}%;background:${color};"></div>
+                </div>
+                <span class="text-xs font-medium tabular-nums">${pctClamped}%</span>
+              </div>
+              <div class="flex items-center justify-between mt-1">
+                <span class="text-[10px] opacity-40">${cr.current_page}${totalPages ? ' / ' + totalPages + ' pages' : ' pages'}</span>
+                <span class="text-[10px] opacity-40">Jour ${days}</span>
+              </div>
+              <div class="flex items-center gap-1 mt-3">
+                <button onclick="openProgressModal(${cr.book_id}, '${cr.title.replace(/'/g, "\\'")}', ${cr.current_page}, ${totalPages})" class="btn btn-xs btn-ghost">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Avancée
+                </button>
+                <button onclick="finishReading(${cr.book_id})" class="btn btn-xs btn-success btn-ghost" title="Terminé">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  Terminé
+                </button>
+                <button onclick="dnfReading(${cr.book_id})" class="btn btn-xs btn-error btn-ghost" title="Abandonner">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  DNF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="card card-border bg-base-100 mb-2">
+      <div class="card-body p-5">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-sm font-medium opacity-60 uppercase tracking-wide">En cours de lecture</h2>
+          ${addBtn}
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          ${cardsHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// --- Sélecteur de livres pour lecture en cours ---
+function openReadingSelector() {
+  const modal = document.getElementById('reading-selector-modal');
+  document.getElementById('reading-selector-search').value = '';
+  renderReadingSelectorList('');
+  modal.showModal();
+}
+
+function closeReadingSelector() {
+  document.getElementById('reading-selector-modal').close();
+}
+
+function filterReadingSelector() {
+  const q = document.getElementById('reading-selector-search').value.toLowerCase();
+  renderReadingSelectorList(q);
+}
+
+function renderReadingSelectorList(query) {
+  const container = document.getElementById('reading-selector-list');
+  const crIds = new Set(currentlyReading.map(cr => cr.book_id));
+  const eligible = libraryBooks().filter(b => !b.is_read && !crIds.has(b.id));
+  const filtered = query
+    ? eligible.filter(b => b.title.toLowerCase().includes(query) || b.author.toLowerCase().includes(query))
+    : eligible;
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<p class="text-center opacity-50 py-4 text-sm">Aucun livre disponible</p>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(b => `
+    <div class="flex items-center justify-between p-2 hover:bg-base-200 cursor-pointer" onclick="startReading(${b.id})">
+      <div class="min-w-0">
+        <div class="text-sm font-medium truncate">${b.title}</div>
+        <div class="text-xs opacity-50">${b.author}${b.page_count ? ' · ' + b.page_count + ' p.' : ''}</div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 opacity-30 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+  `).join('');
+}
+
+async function startReading(bookId) {
+  await api('reading.php', 'POST', { action: 'start', book_id: bookId });
+  await loadCurrentlyReading();
+  closeReadingSelector();
+  displayCurrentlyReading();
+}
+
+// --- Modal progression ---
+let progressMode = 'pages'; // 'pages' or 'pct'
+
+function openProgressModal(bookId, title, currentPage, totalPages) {
+  document.getElementById('progress-book-id').value = bookId;
+  document.getElementById('progress-total-pages').value = totalPages || 0;
+  document.getElementById('progress-book-title').textContent = title + (totalPages ? ` (${totalPages} pages)` : '');
+  document.getElementById('progress-date').value = '';
+  setProgressMode('pages');
+  document.getElementById('progress-page').value = currentPage;
+  // Hide % toggle if no page count
+  document.getElementById('progress-mode-toggle').style.display = totalPages ? '' : 'none';
+  document.getElementById('reading-progress-modal').showModal();
+}
+
+function setProgressMode(mode) {
+  progressMode = mode;
+  const pageInput = document.getElementById('progress-page');
+  const totalPages = parseInt(document.getElementById('progress-total-pages').value) || 0;
+  const btnPages = document.getElementById('progress-mode-pages');
+  const btnPct = document.getElementById('progress-mode-pct');
+
+  if (mode === 'pages') {
+    btnPages.className = 'px-2 py-0.5 rounded-md bg-primary text-primary-content font-medium transition-all';
+    btnPct.className = 'px-2 py-0.5 rounded-md transition-all';
+    // Convert current % value back to pages
+    if (pageInput.dataset.wasPct === '1' && totalPages) {
+      const pct = parseFloat(pageInput.value) || 0;
+      pageInput.value = Math.round((pct / 100) * totalPages);
+    }
+    pageInput.placeholder = 'Numéro de page';
+    pageInput.max = totalPages || '';
+    pageInput.min = 0;
+    pageInput.dataset.wasPct = '0';
+  } else {
+    btnPct.className = 'px-2 py-0.5 rounded-md bg-primary text-primary-content font-medium transition-all';
+    btnPages.className = 'px-2 py-0.5 rounded-md transition-all';
+    // Convert current page value to %
+    if (totalPages) {
+      const currentPage = parseInt(pageInput.value) || 0;
+      pageInput.value = Math.round((currentPage / totalPages) * 100);
+    }
+    pageInput.placeholder = 'Pourcentage';
+    pageInput.max = 100;
+    pageInput.min = 0;
+    pageInput.dataset.wasPct = '1';
+  }
+}
+
+function closeProgressModal() {
+  document.getElementById('reading-progress-modal').close();
+}
+
+async function saveProgress() {
+  const bookId = parseInt(document.getElementById('progress-book-id').value);
+  const totalPages = parseInt(document.getElementById('progress-total-pages').value) || 0;
+  const rawValue = parseFloat(document.getElementById('progress-page').value) || 0;
+  const logDate = document.getElementById('progress-date').value || null;
+
+  // Convert % to page number if needed
+  let page;
+  if (progressMode === 'pct' && totalPages) {
+    page = Math.round((Math.min(100, rawValue) / 100) * totalPages);
+  } else {
+    page = Math.round(rawValue);
+  }
+
+  await api('reading.php', 'POST', { action: 'update_page', book_id: bookId, current_page: page, log_date: logDate });
+  closeProgressModal();
+  await loadCurrentlyReading();
+  displayCurrentlyReading();
+}
+
+async function finishReading(bookId) {
+  await api('reading.php', 'POST', { action: 'finish', book_id: bookId });
+  await Promise.all([loadBooks(), loadCurrentlyReading()]);
+  displayCurrentlyReading();
+  displayShelf();
+}
+
+async function dnfReading(bookId) {
+  await api('reading.php', 'POST', { action: 'dnf', book_id: bookId });
+  await loadCurrentlyReading();
+  displayCurrentlyReading();
+}
+
 // --- Statistiques ---
 // SVG helper: radial gauge (arc from 0 to pct%)
 function svgGauge(pct, label, sublabel, size = 100, color = '#4ade80') {
@@ -709,7 +946,8 @@ function svgGauge(pct, label, sublabel, size = 100, color = '#4ade80') {
   `;
 }
 
-function displayStats() {
+async function displayStats() {
+  await loadReadingLog();
   const container = document.getElementById("stats-content");
   const lib = libraryBooks();
 
@@ -1303,10 +1541,130 @@ function displayStats() {
     `;
   }
 
+  // --- Heatmap de lecture ---
+  let heatmapHtml = '';
+  if (readingLog && readingLog.length > 0) {
+    // Build a map of date -> {pages, books}
+    const logMap = {};
+    readingLog.forEach(entry => {
+      logMap[entry.log_date] = {
+        pages: parseInt(entry.pages) || 0,
+        books: entry.books || []
+      };
+    });
+
+    // Generate last 365 days grid (columns = weeks, rows = days of week)
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 364);
+    // Align to start of week (Monday)
+    const startDay = startDate.getDay();
+    const mondayOffset = startDay === 0 ? -6 : 1 - startDay;
+    startDate.setDate(startDate.getDate() + mondayOffset);
+
+    const weeks = [];
+    let currentWeek = [];
+    const dayLabels = ['L', '', 'M', '', 'V', '', ''];
+    const d = new Date(startDate);
+
+    // Find max pages for color scaling
+    const allPages = Object.values(logMap).map(v => v.pages);
+    const maxPages = allPages.length > 0 ? Math.max(...allPages) : 1;
+    const totalLoggedPages = allPages.reduce((s, p) => s + p, 0);
+    const activeDays = allPages.filter(p => p > 0).length;
+
+    while (d <= today || currentWeek.length > 0) {
+      if (d > today && currentWeek.length < 7) {
+        // Pad last week
+        while (currentWeek.length < 7) currentWeek.push(null);
+      }
+      if (d <= today) {
+        const dateStr = d.toISOString().split('T')[0];
+        const entry = logMap[dateStr] || { pages: 0, books: [] };
+        currentWeek.push({ date: dateStr, pages: entry.pages, books: entry.books });
+        d.setDate(d.getDate() + 1);
+      }
+      if (currentWeek.length === 7) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+
+    // Color function
+    function heatColor(pages) {
+      if (pages === 0) return 'var(--color-base-300, #e5e7eb)';
+      const intensity = Math.min(1, pages / Math.max(maxPages * 0.6, 1));
+      if (intensity < 0.25) return '#c6e48b';
+      if (intensity < 0.5) return '#7bc96f';
+      if (intensity < 0.75) return '#239a3b';
+      return '#196127';
+    }
+
+    // Month labels
+    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    let monthLabelsHtml = '<div class="flex" style="margin-left:20px;">';
+    let lastMonth = -1;
+    weeks.forEach((week, wi) => {
+      const firstDay = week.find(c => c !== null);
+      if (firstDay) {
+        const m = new Date(firstDay.date).getMonth();
+        if (m !== lastMonth) {
+          monthLabelsHtml += `<span class="text-[9px] opacity-40" style="width:${(wi === 0 ? 1 : 1) * 13}px;position:absolute;left:${20 + wi * 13}px;">${monthNames[m]}</span>`;
+          lastMonth = m;
+        }
+      }
+    });
+    monthLabelsHtml += '</div>';
+
+    const cellsHtml = weeks.map(week =>
+      `<div class="flex flex-col gap-[2px]">${week.map(cell => {
+        if (cell === null) return '<div style="width:10px;height:10px;"></div>';
+        const bg = heatColor(cell.pages);
+        const booksAttr = cell.books.length > 0 ? ` data-books="${cell.books.map(b => `${b.title} (${b.pages}p)`).join('||').replace(/"/g, '&quot;')}"` : '';
+        return `<div class="heatmap-cell" style="width:10px;height:10px;background:${bg};border-radius:2px;" data-date="${cell.date}" data-pages="${cell.pages}"${booksAttr}></div>`;
+      }).join('')}</div>`
+    ).join('');
+
+    heatmapHtml = `
+      <div class="card card-border bg-base-100">
+        <div class="card-body p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide">Heatmap de lecture</h3>
+            <div class="flex items-center gap-3 text-[10px] opacity-50">
+              <span>${totalLoggedPages.toLocaleString('fr-FR')} pages</span>
+              <span>${activeDays} jour${activeDays > 1 ? 's' : ''} actif${activeDays > 1 ? 's' : ''}</span>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <div style="position:relative;padding-top:16px;">
+              ${monthLabelsHtml}
+              <div class="flex gap-[2px]" style="margin-top:4px;">
+                <div class="flex flex-col gap-[2px] mr-1" style="width:14px;">
+                  ${dayLabels.map(l => `<div style="height:10px;line-height:10px;" class="text-[9px] opacity-40">${l}</div>`).join('')}
+                </div>
+                ${cellsHtml}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 mt-3 justify-end text-[9px] opacity-40">
+            <span>Moins</span>
+            <div style="width:10px;height:10px;background:var(--color-base-300, #e5e7eb);border-radius:2px;"></div>
+            <div style="width:10px;height:10px;background:#c6e48b;border-radius:2px;"></div>
+            <div style="width:10px;height:10px;background:#7bc96f;border-radius:2px;"></div>
+            <div style="width:10px;height:10px;background:#239a3b;border-radius:2px;"></div>
+            <div style="width:10px;height:10px;background:#196127;border-radius:2px;"></div>
+            <span>Plus</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   // ========== ASSEMBLE DASHBOARD ==========
   container.innerHTML = `
     <div class="max-w-5xl mx-auto flex flex-col gap-4">
       ${heroHtml}
+      ${heatmapHtml}
       ${tickerHtml}
       <div class="grid gap-4 md:grid-cols-2">
         ${wafflePanelHtml}
@@ -1331,6 +1689,46 @@ function displayStats() {
       </div>
     </div>
   `;
+
+  // --- Heatmap tooltip ---
+  const heatmapTooltip = document.createElement('div');
+  heatmapTooltip.className = 'heatmap-tooltip';
+  heatmapTooltip.style.cssText = 'position:fixed;display:none;pointer-events:none;z-index:9999;background:var(--color-base-100,#1f2937);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:220px;color:var(--color-base-content,#e5e7eb);';
+  document.body.appendChild(heatmapTooltip);
+
+  container.addEventListener('mouseover', e => {
+    const cell = e.target.closest('.heatmap-cell');
+    if (!cell) return;
+    const date = cell.dataset.date;
+    const pages = parseInt(cell.dataset.pages);
+    const booksRaw = cell.dataset.books;
+
+    const dateFormatted = new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+    let html = `<div style="font-weight:600;margin-bottom:2px;">${dateFormatted}</div>`;
+    if (pages === 0) {
+      html += `<div style="opacity:.5;">Aucune lecture</div>`;
+    } else {
+      html += `<div style="opacity:.6;margin-bottom:4px;">${pages} page${pages !== 1 ? 's' : ''} lue${pages !== 1 ? 's' : ''}</div>`;
+      if (booksRaw) {
+        const books = booksRaw.split('||');
+        books.forEach(b => {
+          html += `<div style="padding-left:6px;border-left:2px solid #7bc96f;margin-top:2px;">${b}</div>`;
+        });
+      }
+    }
+    heatmapTooltip.innerHTML = html;
+    heatmapTooltip.style.display = 'block';
+
+    const rect = cell.getBoundingClientRect();
+    heatmapTooltip.style.left = (rect.left + rect.width / 2 - heatmapTooltip.offsetWidth / 2) + 'px';
+    heatmapTooltip.style.top = (rect.top - heatmapTooltip.offsetHeight - 6) + 'px';
+  });
+
+  container.addEventListener('mouseout', e => {
+    if (e.target.closest('.heatmap-cell')) {
+      heatmapTooltip.style.display = 'none';
+    }
+  });
 }
 
 // --- Wishlist ---
@@ -2160,10 +2558,22 @@ window.clearBookFilter = clearBookFilter;
 window.addLoan = addLoan;
 window.returnLoan = returnLoan;
 window.deleteLoan = deleteLoan;
+window.displayCurrentlyReading = displayCurrentlyReading;
+window.openReadingSelector = openReadingSelector;
+window.closeReadingSelector = closeReadingSelector;
+window.filterReadingSelector = filterReadingSelector;
+window.startReading = startReading;
+window.openProgressModal = openProgressModal;
+window.closeProgressModal = closeProgressModal;
+window.saveProgress = saveProgress;
+window.setProgressMode = setProgressMode;
+window.finishReading = finishReading;
+window.dnfReading = dnfReading;
 
 // --- Initialisation ---
 document.addEventListener("DOMContentLoaded", async () => {
-  await Promise.all([loadBooks(), loadChallengeData()]);
+  await Promise.all([loadBooks(), loadChallengeData(), loadCurrentlyReading()]);
+  displayCurrentlyReading();
   displayShelf();
 
   // Sync color picker → swatches

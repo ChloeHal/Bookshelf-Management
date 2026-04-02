@@ -7,6 +7,21 @@ $migrations = [
     "ALTER TABLE books ADD COLUMN page_count INT UNSIGNED DEFAULT NULL AFTER rating",
     "ALTER TABLE books ADD COLUMN color VARCHAR(7) DEFAULT NULL AFTER page_count",
     "ALTER TABLE books ADD COLUMN size TINYINT UNSIGNED DEFAULT NULL AFTER color",
+    "CREATE TABLE IF NOT EXISTS currently_reading (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        book_id INT NOT NULL UNIQUE,
+        current_page INT NOT NULL DEFAULT 0,
+        started_at DATE NOT NULL DEFAULT (CURRENT_DATE),
+        FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    )",
+    "CREATE TABLE IF NOT EXISTS reading_log (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        book_id INT NOT NULL,
+        pages_read INT NOT NULL,
+        log_date DATE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+    )",
 ];
 
 $results = [];
