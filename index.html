@@ -24,7 +24,7 @@
         <h1
           class="text-4xl font-light tracking-tight bg-gradient-to-r from-base-content to-base-content/50 bg-clip-text text-primary mb-8"
         >
-          Ma Bibliothèque!
+          Ma Bibliothèque !
         </h1>
         <div role="tablist" class="tabs tabs-border justify-center flex-wrap">
           <button
@@ -34,11 +34,7 @@
           >
             Accueil
           </button>
-          <button
-            role="tab"
-            class="tab"
-            onclick="showPage('list-page')"
-          >
+          <button role="tab" class="tab" onclick="showPage('list-page')">
             Tous mes livres
           </button>
           <button role="tab" class="tab" onclick="showPage('wishlist-page')">
@@ -65,8 +61,28 @@
         <div id="currently-reading-section" class="mb-6"></div>
 
         <div class="flex justify-between items-center mb-4">
-          <button id="edit-mode-btn" onclick="toggleEditMode()" class="btn btn-ghost btn-sm opacity-40 hover:opacity-100 gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <button
+            id="edit-mode-btn"
+            onclick="toggleEditMode()"
+            class="btn btn-ghost btn-sm opacity-40 hover:opacity-100 gap-1"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+              />
+              <path
+                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+              />
+            </svg>
             <span class="text-xs">Edit</span>
           </button>
           <div id="shelf-legend" class="text-xs opacity-40"></div>
@@ -117,11 +133,24 @@
                 min="2000"
                 max="2030"
               />
-              <button type="button" onclick="toggleAddExtras()" class="btn btn-ghost btn-xs opacity-50" id="add-extras-btn">+ Voir plus</button>
+              <button
+                type="button"
+                onclick="toggleAddExtras()"
+                class="btn btn-ghost btn-xs opacity-50"
+                id="add-extras-btn"
+              >
+                + Voir plus
+              </button>
             </div>
             <div id="add-extras" class="hidden mt-3">
               <div class="grid gap-4 md:grid-cols-3">
-                <input type="number" id="book-pages" class="input w-full" placeholder="Nombre de pages" min="1" />
+                <input
+                  type="number"
+                  id="book-pages"
+                  class="input w-full"
+                  placeholder="Nombre de pages"
+                  min="1"
+                />
                 <select id="book-size" class="select w-full">
                   <option value="" disabled selected>Taille</option>
                   <option value="1">Petit</option>
@@ -129,8 +158,16 @@
                   <option value="3">Grand</option>
                 </select>
                 <div class="flex items-center gap-2">
-                  <input type="color" id="book-color" class="w-8 h-8 cursor-pointer border border-base-300" value="#2c2c2c" />
-                  <div id="add-color-swatches" class="flex flex-wrap gap-1"></div>
+                  <input
+                    type="color"
+                    id="book-color"
+                    class="w-8 h-8 cursor-pointer border border-base-300"
+                    value="#2c2c2c"
+                  />
+                  <div
+                    id="add-color-swatches"
+                    class="flex flex-wrap gap-1"
+                  ></div>
                 </div>
               </div>
             </div>
@@ -206,11 +243,18 @@
               <select id="loan-book" class="select w-full">
                 <option disabled selected>Choisir un livre...</option>
               </select>
-              <input type="text" id="loan-person" class="input w-full" placeholder="Emprunté par..." />
+              <input
+                type="text"
+                id="loan-person"
+                class="input w-full"
+                placeholder="Emprunté par..."
+              />
               <input type="date" id="loan-date" class="input w-full" />
             </div>
             <div class="card-actions mt-4">
-              <button onclick="addLoan()" class="btn btn-primary">Enregistrer l'emprunt</button>
+              <button onclick="addLoan()" class="btn btn-primary">
+                Enregistrer l'emprunt
+              </button>
             </div>
           </div>
         </div>
@@ -259,16 +303,49 @@
       <div class="modal-box">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-lg">Modifier le livre</h3>
-          <button onclick="closeEditModal()" class="btn btn-sm btn-circle btn-ghost">✕</button>
+          <button
+            onclick="closeEditModal()"
+            class="btn btn-sm btn-circle btn-ghost"
+          >
+            ✕
+          </button>
         </div>
         <input type="hidden" id="edit-book-id" />
         <div class="flex flex-col gap-3">
-          <input type="text" id="edit-book-title" class="input w-full" placeholder="Titre" />
-          <input type="text" id="edit-book-author" class="input w-full" placeholder="Auteur" />
-          <input type="text" id="edit-book-genres" class="input w-full" placeholder="Genres (virgules)" />
+          <input
+            type="text"
+            id="edit-book-title"
+            class="input w-full"
+            placeholder="Titre"
+          />
+          <input
+            type="text"
+            id="edit-book-author"
+            class="input w-full"
+            placeholder="Auteur"
+          />
+          <input
+            type="text"
+            id="edit-book-genres"
+            class="input w-full"
+            placeholder="Genres (virgules)"
+          />
           <div class="grid grid-cols-2 gap-3">
-            <input type="number" id="edit-book-pages" class="input w-full" placeholder="Nombre de pages" min="1" />
-            <input type="number" id="edit-book-year" class="input w-full" placeholder="Année" min="2000" max="2030" />
+            <input
+              type="number"
+              id="edit-book-pages"
+              class="input w-full"
+              placeholder="Nombre de pages"
+              min="1"
+            />
+            <input
+              type="number"
+              id="edit-book-year"
+              class="input w-full"
+              placeholder="Année"
+              min="2000"
+              max="2030"
+            />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <select id="edit-book-size" class="select w-full">
@@ -277,7 +354,11 @@
               <option value="3">Grand</option>
             </select>
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" id="edit-book-gift" class="toggle toggle-sm" />
+              <input
+                type="checkbox"
+                id="edit-book-gift"
+                class="toggle toggle-sm"
+              />
               <span class="text-sm">Cadeau</span>
             </label>
           </div>
@@ -285,7 +366,12 @@
             <label class="text-sm opacity-60 mb-1 block">Couleur</label>
             <div class="flex items-center gap-2 flex-wrap">
               <div id="edit-color-swatches" class="flex flex-wrap gap-1"></div>
-              <input type="color" id="edit-book-color" class="w-8 h-8 cursor-pointer border border-base-300" title="Couleur personnalisée" />
+              <input
+                type="color"
+                id="edit-book-color"
+                class="w-8 h-8 cursor-pointer border border-base-300"
+                title="Couleur personnalisée"
+              />
             </div>
           </div>
           <div>
@@ -294,8 +380,12 @@
           </div>
         </div>
         <div class="modal-action">
-          <button onclick="saveBookEdit()" class="btn btn-primary">Enregistrer</button>
-          <button onclick="closeEditModal()" class="btn btn-ghost">Annuler</button>
+          <button onclick="saveBookEdit()" class="btn btn-primary">
+            Enregistrer
+          </button>
+          <button onclick="closeEditModal()" class="btn btn-ghost">
+            Annuler
+          </button>
         </div>
       </div>
       <form method="dialog" class="modal-backdrop">
@@ -308,9 +398,20 @@
       <div class="modal-box">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-lg">Commencer un livre</h3>
-          <button onclick="closeReadingSelector()" class="btn btn-sm btn-circle btn-ghost">✕</button>
+          <button
+            onclick="closeReadingSelector()"
+            class="btn btn-sm btn-circle btn-ghost"
+          >
+            ✕
+          </button>
         </div>
-        <input type="text" id="reading-selector-search" class="input w-full mb-4" placeholder="Rechercher un livre..." oninput="filterReadingSelector()" />
+        <input
+          type="text"
+          id="reading-selector-search"
+          class="input w-full mb-4"
+          placeholder="Rechercher un livre..."
+          oninput="filterReadingSelector()"
+        />
         <div id="reading-selector-list" class="max-h-80 overflow-y-auto"></div>
       </div>
       <form method="dialog" class="modal-backdrop">
@@ -323,7 +424,12 @@
       <div class="modal-box max-w-sm">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-lg">Mettre à jour</h3>
-          <button onclick="closeProgressModal()" class="btn btn-sm btn-circle btn-ghost">✕</button>
+          <button
+            onclick="closeProgressModal()"
+            class="btn btn-sm btn-circle btn-ghost"
+          >
+            ✕
+          </button>
         </div>
         <input type="hidden" id="progress-book-id" />
         <input type="hidden" id="progress-total-pages" />
@@ -332,21 +438,50 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="text-sm opacity-60">Progression</label>
-              <div id="progress-mode-toggle" class="flex bg-base-200 rounded-lg p-0.5 text-xs">
-                <button type="button" onclick="setProgressMode('pages')" id="progress-mode-pages" class="px-2 py-0.5 rounded-md bg-primary text-primary-content font-medium transition-all">Pages</button>
-                <button type="button" onclick="setProgressMode('pct')" id="progress-mode-pct" class="px-2 py-0.5 rounded-md transition-all">%</button>
+              <div
+                id="progress-mode-toggle"
+                class="flex bg-base-200 rounded-lg p-0.5 text-xs"
+              >
+                <button
+                  type="button"
+                  onclick="setProgressMode('pages')"
+                  id="progress-mode-pages"
+                  class="px-2 py-0.5 rounded-md bg-primary text-primary-content font-medium transition-all"
+                >
+                  Pages
+                </button>
+                <button
+                  type="button"
+                  onclick="setProgressMode('pct')"
+                  id="progress-mode-pct"
+                  class="px-2 py-0.5 rounded-md transition-all"
+                >
+                  %
+                </button>
               </div>
             </div>
-            <input type="number" id="progress-page" class="input w-full" min="0" placeholder="Numéro de page" />
+            <input
+              type="number"
+              id="progress-page"
+              class="input w-full"
+              min="0"
+              placeholder="Numéro de page"
+            />
           </div>
           <div>
-            <label class="text-sm opacity-60 mb-1 block">Date (laisser vide = aujourd'hui)</label>
+            <label class="text-sm opacity-60 mb-1 block"
+              >Date (laisser vide = aujourd'hui)</label
+            >
             <input type="date" id="progress-date" class="input w-full" />
           </div>
         </div>
         <div class="modal-action">
-          <button onclick="saveProgress()" class="btn btn-primary">Enregistrer</button>
-          <button onclick="closeProgressModal()" class="btn btn-ghost">Annuler</button>
+          <button onclick="saveProgress()" class="btn btn-primary">
+            Enregistrer
+          </button>
+          <button onclick="closeProgressModal()" class="btn btn-ghost">
+            Annuler
+          </button>
         </div>
       </div>
       <form method="dialog" class="modal-backdrop">
@@ -355,8 +490,8 @@
     </dialog>
 
     <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js');
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js");
       }
     </script>
     <script type="module" src="/script.js?v=3"></script>
