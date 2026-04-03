@@ -1553,96 +1553,116 @@ async function displayStats() {
       };
     });
 
-    // Generate last 365 days grid (columns = weeks, rows = days of week)
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - 364);
-    // Align to start of week (Monday)
-    const startDay = startDate.getDay();
-    const mondayOffset = startDay === 0 ? -6 : 1 - startDay;
-    startDate.setDate(startDate.getDate() + mondayOffset);
+    // Extract available years from reading data
+    const availableYears = [...new Set(readingLog.map(e => new Date(e.log_date).getFullYear()))].sort((a, b) => b - a);
+    const currentYear = new Date().getFullYear();
+    const defaultYear = availableYears.includes(currentYear) ? currentYear : availableYears[0];
 
-    const weeks = [];
-    let currentWeek = [];
-    const dayLabels = ['L', '', 'M', '', 'V', '', ''];
-    const d = new Date(startDate);
+    function buildHeatmapGrid(year) {
+      const today = new Date();
+      const isCurrentYear = year === today.getFullYear();
+      const startDate = new Date(year, 0, 1);
+      const endDate = isCurrentYear ? today : new Date(year, 11, 31);
 
-    // Find max pages for color scaling
-    const allPages = Object.values(logMap).map(v => v.pages);
-    const maxPages = allPages.length > 0 ? Math.max(...allPages) : 1;
-    const totalLoggedPages = allPages.reduce((s, p) => s + p, 0);
-    const activeDays = allPages.filter(p => p > 0).length;
+      // Align to start of week (Monday)
+      const startDay = startDate.getDay();
+      const mondayOffset = startDay === 0 ? -6 : 1 - startDay;
+      startDate.setDate(startDate.getDate() + mondayOffset);
 
-    while (d <= today || currentWeek.length > 0) {
-      if (d > today && currentWeek.length < 7) {
-        // Pad last week
-        while (currentWeek.length < 7) currentWeek.push(null);
-      }
-      if (d <= today) {
-        const dateStr = d.toISOString().split('T')[0];
-        const entry = logMap[dateStr] || { pages: 0, books: [] };
-        currentWeek.push({ date: dateStr, pages: entry.pages, books: entry.books });
-        d.setDate(d.getDate() + 1);
-      }
-      if (currentWeek.length === 7) {
-        weeks.push(currentWeek);
-        currentWeek = [];
-      }
-    }
+      const weeks = [];
+      let currentWeek = [];
+      const dayLabels = ['L', '', 'M', '', 'V', '', ''];
+      const d = new Date(startDate);
 
-    // Color function
-    function heatColor(pages) {
-      if (pages === 0) return 'var(--color-base-300, #e5e7eb)';
-      const intensity = Math.min(1, pages / Math.max(maxPages * 0.6, 1));
-      if (intensity < 0.25) return '#c6e48b';
-      if (intensity < 0.5) return '#7bc96f';
-      if (intensity < 0.75) return '#239a3b';
-      return '#196127';
-    }
+      // Filter pages for this year only for stats
+      const yearPages = Object.entries(logMap)
+        .filter(([date]) => new Date(date).getFullYear() === year)
+        .map(([, v]) => v.pages);
+      const maxPages = yearPages.length > 0 ? Math.max(...yearPages) : 1;
+      const totalLoggedPages = yearPages.reduce((s, p) => s + p, 0);
+      const activeDays = yearPages.filter(p => p > 0).length;
 
-    // Month labels
-    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-    let monthLabelsHtml = '<div class="flex" style="margin-left:20px;">';
-    let lastMonth = -1;
-    weeks.forEach((week, wi) => {
-      const firstDay = week.find(c => c !== null);
-      if (firstDay) {
-        const m = new Date(firstDay.date).getMonth();
-        if (m !== lastMonth) {
-          monthLabelsHtml += `<span class="text-[9px] opacity-40" style="width:${(wi === 0 ? 1 : 1) * 13}px;position:absolute;left:${20 + wi * 13}px;">${monthNames[m]}</span>`;
-          lastMonth = m;
+      while (d <= endDate || currentWeek.length > 0) {
+        if (d > endDate && currentWeek.length < 7) {
+          while (currentWeek.length < 7) currentWeek.push(null);
+        }
+        if (d <= endDate) {
+          const dateStr = d.toISOString().split('T')[0];
+          const entry = logMap[dateStr] || { pages: 0, books: [] };
+          currentWeek.push({ date: dateStr, pages: entry.pages, books: entry.books });
+          d.setDate(d.getDate() + 1);
+        }
+        if (currentWeek.length === 7) {
+          weeks.push(currentWeek);
+          currentWeek = [];
         }
       }
-    });
-    monthLabelsHtml += '</div>';
 
-    const cellsHtml = weeks.map(week =>
-      `<div class="flex flex-col gap-[2px]">${week.map(cell => {
-        if (cell === null) return '<div style="width:10px;height:10px;"></div>';
-        const bg = heatColor(cell.pages);
-        const booksAttr = cell.books.length > 0 ? ` data-books="${cell.books.map(b => `${b.title} (${b.pages}p)`).join('||').replace(/"/g, '&quot;')}"` : '';
-        return `<div class="heatmap-cell" style="width:10px;height:10px;background:${bg};border-radius:2px;" data-date="${cell.date}" data-pages="${cell.pages}"${booksAttr}></div>`;
-      }).join('')}</div>`
+      function heatColor(pages) {
+        if (pages === 0) return 'var(--color-base-300, #e5e7eb)';
+        const intensity = Math.min(1, pages / Math.max(maxPages * 0.6, 1));
+        if (intensity < 0.25) return '#c6e48b';
+        if (intensity < 0.5) return '#7bc96f';
+        if (intensity < 0.75) return '#239a3b';
+        return '#196127';
+      }
+
+      const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+      let monthLabelsHtml = '<div class="flex" style="margin-left:20px;">';
+      let lastMonth = -1;
+      weeks.forEach((week, wi) => {
+        const firstDay = week.find(c => c !== null);
+        if (firstDay) {
+          const m = new Date(firstDay.date).getMonth();
+          if (m !== lastMonth) {
+            monthLabelsHtml += `<span class="text-[9px] opacity-40" style="width:13px;position:absolute;left:${20 + wi * 13}px;">${monthNames[m]}</span>`;
+            lastMonth = m;
+          }
+        }
+      });
+      monthLabelsHtml += '</div>';
+
+      const cellsHtml = weeks.map(week =>
+        `<div class="flex flex-col gap-[2px]">${week.map(cell => {
+          if (cell === null) return '<div style="width:10px;height:10px;"></div>';
+          const bg = heatColor(cell.pages);
+          const booksAttr = cell.books.length > 0 ? ` data-books="${cell.books.map(b => `${b.title} (${b.pages}p)`).join('||').replace(/"/g, '&quot;')}"` : '';
+          return `<div class="heatmap-cell" style="width:10px;height:10px;background:${bg};border-radius:2px;" data-date="${cell.date}" data-pages="${cell.pages}"${booksAttr}></div>`;
+        }).join('')}</div>`
+      ).join('');
+
+      return { monthLabelsHtml, cellsHtml, dayLabels, totalLoggedPages, activeDays };
+    }
+
+    const initial = buildHeatmapGrid(defaultYear);
+
+    const yearOptionsHtml = availableYears.map(y =>
+      `<option value="${y}"${y === defaultYear ? ' selected' : ''}>${y}</option>`
     ).join('');
 
     heatmapHtml = `
       <div class="card card-border bg-base-100">
         <div class="card-body p-5">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide">Heatmap de lecture</h3>
-            <div class="flex items-center gap-3 text-[10px] opacity-50">
-              <span>${totalLoggedPages.toLocaleString('fr-FR')} pages</span>
-              <span>${activeDays} jour${activeDays > 1 ? 's' : ''} actif${activeDays > 1 ? 's' : ''}</span>
+            <div class="flex items-center gap-3">
+              <h3 class="text-xs font-medium opacity-60 uppercase tracking-wide">Heatmap de lecture</h3>
+              <select id="heatmap-year-select" class="select select-xs select-bordered text-xs" style="min-height:0;height:24px;padding:0 20px 0 8px;">
+                ${yearOptionsHtml}
+              </select>
+            </div>
+            <div class="flex items-center gap-3 text-[10px] opacity-50" id="heatmap-stats">
+              <span>${initial.totalLoggedPages.toLocaleString('fr-FR')} pages</span>
+              <span>${initial.activeDays} jour${initial.activeDays > 1 ? 's' : ''} actif${initial.activeDays > 1 ? 's' : ''}</span>
             </div>
           </div>
           <div class="overflow-x-auto">
-            <div style="position:relative;padding-top:16px;">
-              ${monthLabelsHtml}
+            <div id="heatmap-grid" style="position:relative;padding-top:16px;">
+              ${initial.monthLabelsHtml}
               <div class="flex gap-[2px]" style="margin-top:4px;">
                 <div class="flex flex-col gap-[2px] mr-1" style="width:14px;">
-                  ${dayLabels.map(l => `<div style="height:10px;line-height:10px;" class="text-[9px] opacity-40">${l}</div>`).join('')}
+                  ${initial.dayLabels.map(l => `<div style="height:10px;line-height:10px;" class="text-[9px] opacity-40">${l}</div>`).join('')}
                 </div>
-                ${cellsHtml}
+                ${initial.cellsHtml}
               </div>
             </div>
           </div>
@@ -1658,6 +1678,9 @@ async function displayStats() {
         </div>
       </div>
     `;
+
+    // Store buildHeatmapGrid on window so the event listener can access it after innerHTML is set
+    window._heatmapBuildGrid = buildHeatmapGrid;
   }
 
   // ========== ASSEMBLE DASHBOARD ==========
@@ -1729,6 +1752,35 @@ async function displayStats() {
       heatmapTooltip.style.display = 'none';
     }
   });
+
+  // --- Heatmap year selector ---
+  const yearSelect = document.getElementById('heatmap-year-select');
+  if (yearSelect && window._heatmapBuildGrid) {
+    const dayLabels = ['L', '', 'M', '', 'V', '', ''];
+    yearSelect.addEventListener('change', () => {
+      const year = parseInt(yearSelect.value);
+      const result = window._heatmapBuildGrid(year);
+      const gridEl = document.getElementById('heatmap-grid');
+      const statsEl = document.getElementById('heatmap-stats');
+      if (gridEl) {
+        gridEl.innerHTML = `
+          ${result.monthLabelsHtml}
+          <div class="flex gap-[2px]" style="margin-top:4px;">
+            <div class="flex flex-col gap-[2px] mr-1" style="width:14px;">
+              ${dayLabels.map(l => `<div style="height:10px;line-height:10px;" class="text-[9px] opacity-40">${l}</div>`).join('')}
+            </div>
+            ${result.cellsHtml}
+          </div>
+        `;
+      }
+      if (statsEl) {
+        statsEl.innerHTML = `
+          <span>${result.totalLoggedPages.toLocaleString('fr-FR')} pages</span>
+          <span>${result.activeDays} jour${result.activeDays > 1 ? 's' : ''} actif${result.activeDays > 1 ? 's' : ''}</span>
+        `;
+      }
+    });
+  }
 }
 
 // --- Wishlist ---
