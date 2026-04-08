@@ -10,7 +10,9 @@ switch ($method) {
         if ($action === 'current') {
             // Get all currently reading books with book info
             $stmt = $pdo->query('
-                SELECT cr.id, cr.book_id, cr.current_page, cr.started_at,
+                SELECT cr.id, cr.book_id,
+                       COALESCE((SELECT SUM(rl.pages_read) FROM reading_log rl WHERE rl.book_id = cr.book_id), 0) AS current_page,
+                       cr.started_at,
                        b.title, b.author, b.page_count, b.color, b.genres
                 FROM currently_reading cr
                 JOIN books b ON b.id = cr.book_id
@@ -26,12 +28,11 @@ switch ($method) {
             }
             echo json_encode($rows);
         } elseif ($action === 'heatmap') {
-            // Get reading log for heatmap (last 365 days) with book details
+            // Get reading log for heatmap with book details
             $stmt = $pdo->query('
                 SELECT rl.log_date, rl.pages_read, b.title
                 FROM reading_log rl
                 JOIN books b ON b.id = rl.book_id
-                WHERE rl.log_date >= DATE_SUB(CURDATE(), INTERVAL 365 DAY)
                 ORDER BY rl.log_date ASC
             ');
             $rows = $stmt->fetchAll();
